@@ -28,7 +28,7 @@ Download `glyph-orbit-dial-<version>-release.apk` from the
 [Releases](../../releases) page, or build it as below. Then:
 
 ```bash
-adb install glyph-orbit-dial-v0.2-release.apk
+adb install glyph-orbit-dial-v0.2-release.apk    # -r over an earlier version
 ```
 
 On the phone: **Settings > Glyph Interface > Flip to Glyph > Always-on Glyph Toy**, choose
@@ -300,6 +300,16 @@ Change `applicationId` and `namespace` in `app/build.gradle.kts` so your build i
 this one, the three strings in `res/values/strings.xml` (`toy_name` and `toy_summary` are what
 the Glyph Toys list shows), and sign the release with your own key as described under Build from
 source.
+
+## Releases
+
+| | date | what changed |
+|---|---|---|
+| v0.2 | 26/09/2026 | Same dial. The SDK fetch is pinned to one kit commit with the aar's SHA-256 checked; 24 JVM tests and CI; the service ignores SDK callbacks after unbind, redraws in full after a Glyph service disconnect, and clamps a debug build's values to what the panel can draw; `minutePositions` counts visible positions; log tag `OrbitDial` |
+| v0.1 | 26/09/2026 | First release |
+
+Each release's APK is signed with the same key; its SHA-256 and the signing certificate's are
+in the release notes.
 
 ## Licence and notices
 
