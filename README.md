@@ -119,9 +119,9 @@ do, and looked washed out beside them on the panel. This app's frames read
 
 ### A brightness ratio tuned on a screen does not transfer to the LEDs
 
-The dial's quiet scales were designed at 409 (20 per cent of 2047) in a browser preview. On the
-panel that read as off: the eleven inactive scales disappeared and the dial became one lit mark
-alone on a dark disc. The shipped value, 614, was settled by looking at the phone.
+The dial's quiet scales were first set as a fraction of full in a browser preview. On the panel
+that read as off: the eleven inactive scales disappeared and the dial became one lit mark alone
+on a dark disc. The shipped value, 614, was settled by looking at the phone.
 
 The LEDs' response near the bottom of their range is not a display's. Treat any brightness
 fraction taken from a mock as a starting point, not a value. `tools/tuner.py` exists so that
@@ -139,7 +139,7 @@ the minute boundary:
 Within about 20 ms. A clock therefore needs no timer of its own, and the first interval after a
 bind is short rather than a full minute. An unchanged frame is not pushed.
 
-### Hour scales are drawn as rays stepping inward, not at two radii
+### Hour scales are drawn as rays stepping inward
 
 Each scale is the rim cell for its hour, then a walk inward one grid step at a time, in whichever
 of the eight directions points most nearly at the centre:
@@ -156,36 +156,19 @@ for (k in 1 until length) {
 }
 ```
 
-Re-solving the polar position at a smaller radius is the obvious alternative. At one o'clock,
-radius 6 gives `(9,1)` and radius 5 gives `(9,2)`: the same column, so the mark would read as a
-vertical pair rather than a stroke aimed at the middle. Stepping gives `(8,2)`, a diagonal, and
-on the panel the dial reads as twelve ticks.
+Stepping keeps each scale reading as a stroke aimed at the middle: at one o'clock the two cells
+are `(9,1)` and `(8,2)`, a diagonal, and on the panel the dial reads as twelve ticks.
 
 ### A 13 x 13 grid cannot show sixty minute positions
 
 The ring the minute mark travels passes through far fewer cells than sixty, so the mark stands
-still for whole minutes at a time. For the shipped 2 x 2 mark:
+still for whole minutes at a time. The shipped 2 x 2 mark at orbit 1.5 lands on 12 distinct
+positions in an hour, changes 0.80 LEDs a minute on average, and stands still for up to 7
+minutes. `ClockFace.minutePositions` computes the position count for whatever dial is loaded,
+and the service logs it at bind.
 
-| orbit (cells) | distinct positions | LEDs changing per minute, on average | longest stall |
-|---|---|---|---|
-| 1.0 | 6 | 0.47 | 16 minutes |
-| 1.5 | 12 | 0.80 | 7 minutes |
-| 2.0 | 14 | 1.00 | 6 minutes |
-| 3.0 | 22 | 1.53 | 4 minutes |
-
-`ClockFace.minutePositions` computes the second column for whatever dial is loaded, and the
-service logs it at bind.
-
-Orbit 1.5 is shipped, which keeps the mark two cells clear of the hour scales. The mark is a
-2 x 2 block rather than one LED because one LED was too faint to find. A block does not travel
-further than a dot: at orbit 1.5 a single LED's centre shifts 0.27 cells a minute on average and
-the block's 0.20, since both follow the same rounded path and the block repeats a position
-slightly more often. What changes is that 0.80 LEDs switch on or off per minute rather than 0.53,
-which makes each step easier to notice.
-
-Size and orbit are coupled. A 2 x 2 clears the hour scales at orbit 1.5 and collides with them on
-24 minutes out of 60 at orbit 3.5; a 4 x 4 fills the middle of the disc and takes 16 of the 137
-LEDs.
+Orbit 1.5 keeps the mark two cells clear of the hour scales. The mark is a 2 x 2 block rather
+than one LED because one LED was too faint to find.
 
 ### A toy service with no launcher activity is still listed
 
@@ -241,8 +224,8 @@ Every dimension of the dial is a field on `Dial`.
 A **debug** build can be changed over adb, without a rebuild, while the dial is showing:
 
 ```bash
-adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ei dim 800
-adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ef minute_orbit 2.0
+adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ei dim 614
+adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ef minute_orbit 1.5
 adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ez reset true
 ```
 
@@ -261,7 +244,7 @@ python3 tools/tuner.py          # finds the (4a) Pro, listens on 127.0.0.1:8732
 ```
 
 ```
-POST /set   {"full": 2047, "dim": 800, "scale_length": 2, "minute_orbit": 1.5, "minute_size": 2}
+POST /set   {"full": 2047, "dim": 614, "scale_length": 2, "minute_orbit": 1.5, "minute_size": 2}
 GET  /      {"ok": true, "serial": "…", "fields": [...]}
 ```
 
