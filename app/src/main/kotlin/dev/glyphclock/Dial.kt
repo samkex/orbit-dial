@@ -38,9 +38,10 @@ data class Dial(
     /**
      * The minute mark's side, in cells.
      *
-     * A block rather than a dot, because one LED was too faint to find. It also moves more: at
-     * orbit 1.5 a single LED shifts 0.27 cells a minute on average and a 2 by 2 shifts 0.37,
-     * because a block's edge crosses a cell boundary far more often than its centre does.
+     * A block rather than a dot, because one LED was too faint to find. It does not travel further:
+     * at orbit 1.5 a single LED's centre shifts 0.27 cells a minute on average and a 2 by 2's 0.20.
+     * What a block does is change more LEDs per step, 0.80 a minute against 0.53, so each step is
+     * easier to notice.
      */
     val minuteSize: Int = 2,
 ) {

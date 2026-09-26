@@ -31,6 +31,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FACE = ROOT / "app/src/main/kotlin/dev/glyphclock/Dial.kt"
 OUT = ROOT / "app/src/main/res/drawable/ic_toy_preview.xml"
 DOC = ROOT / "docs/orbit-dial.svg"       # the README image, from the same numbers
+ANIM = ROOT / "docs/orbit-dial-hours.svg" # the same dial over two hours, animated, for the README
+LOTTIE = ROOT / "docs/orbit-dial.lottie.json"  # the same animation as Lottie, for players elsewhere
+
+ANIM_START_HOUR = 10       # two hours from here, so the lit scale is seen to move once
+ANIM_MINUTES = 120
+ANIM_SECONDS_PER_MINUTE = 0.12
 
 SIDE = 13                     # Phone (4a) Pro; the toy's preview is for that panel
 W = 271.0                     # the spec's icon canvas
@@ -86,8 +92,8 @@ def scale_ray(deg, length):
     return out
 
 
-def frame():
-    """The same face ClockFace.render would produce for HOUR:MINUTE."""
+def frame(hour=HOUR, minute=MINUTE):
+    """The same face ClockFace.render would produce for hour:minute."""
     grid = [[0] * SIDE for _ in range(SIDE)]
 
     def put(col, row, value):
@@ -96,9 +102,9 @@ def frame():
 
     for h in range(12):
         for col, row in scale_ray(h * 30, SCALE_LENGTH):
-            put(col, row, FULL if h == HOUR else DIM)
+            put(col, row, FULL if h == hour % 12 else DIM)
 
-    fx, fy = polar(MINUTE_ORBIT, MINUTE * 6)
+    fx, fy = polar(MINUTE_ORBIT, minute * 6)
     left = round(fx - (MINUTE_SIZE - 1) / 2.0)
     top = round(fy - (MINUTE_SIZE - 1) / 2.0)
     for dy in range(MINUTE_SIZE):
@@ -156,6 +162,13 @@ def main():
     write_doc_image(grid)
     print(f"{DOC.relative_to(ROOT)}: same frame, as SVG")
 
+    frames = [frame(ANIM_START_HOUR + m // 60, m % 60) for m in range(ANIM_MINUTES)]
+    write_animated_svg(frames)
+    print(f"{ANIM.relative_to(ROOT)}: {ANIM_MINUTES} minutes, "
+          f"{ANIM_MINUTES * ANIM_SECONDS_PER_MINUTE:.0f} s loop, SMIL")
+    write_lottie(frames)
+    print(f"{LOTTIE.relative_to(ROOT)}: same animation as Lottie")
+
 
 def write_doc_image(grid):
     """The README image. Plain SVG so it needs no library and GitHub renders it inline.
@@ -188,6 +201,123 @@ def write_doc_image(grid):
     parts.append("</svg>")
     DOC.parent.mkdir(exist_ok=True)
     DOC.write_text("\n".join(parts) + "\n")
+
+def cell_geometry(size):
+    pitch = size * (1 - INSET * 2) / SIDE
+    cell = pitch * CELL_RATIO
+    return pitch, cell
+
+
+def write_animated_svg(frames):
+    """Two hours of the dial as an animated SVG.
+
+    SMIL rather than script, because GitHub shows README images through an <img> tag, where
+    scripts never run but SMIL animation does. Only cells whose brightness changes over the loop
+    get an <animate>; a cell that stays dim or stays off is a plain rect, which keeps the file
+    to a few tens of kilobytes rather than a few hundred.
+    """
+    size = 520.0
+    pitch, cell = cell_geometry(size)
+    n = len(frames)
+    dur = n * ANIM_SECONDS_PER_MINUTE
+    key_times = ";".join(f"{i / n:.4f}" for i in range(n))
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{int(size)}" height="{int(size)}" '
+        f'viewBox="0 0 {int(size)} {int(size)}" role="img" '
+        f'aria-label="Orbit Dial over two hours: the minute block orbits, then the lit scale '
+        f'moves to the next hour">',
+        f'  <rect width="{int(size)}" height="{int(size)}" fill="#0a0a0a"/>',
+        f'  <circle cx="{size / 2}" cy="{size / 2}" r="{size / 2}" fill="#000"/>',
+    ]
+    animated = 0
+    for row in range(SIDE):
+        for col in range(SIDE):
+            if not has_led(col, row):
+                continue
+            x = size * INSET + pitch * col + (pitch - cell) / 2
+            y = size * INSET + pitch * row + (pitch - cell) / 2
+            series = [f[row][col] for f in frames]
+            if len(set(series)) == 1:
+                v = series[0]
+                fill = f'fill="#fff" fill-opacity="{v / FULL:.3f}"' if v else f'fill="{UNLIT}"'
+                parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" '
+                             f'height="{cell:.1f}" {fill}/>')
+                continue
+            # An LED that is off is drawn in the unlit grey, not left black, so the animated cells
+            # carry their own grey underlay and fade the white above it.
+            animated += 1
+            values = ";".join(f"{v / FULL:.3f}" for v in series)
+            parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" height="{cell:.1f}" '
+                         f'fill="{UNLIT}"/>')
+            parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" height="{cell:.1f}" '
+                         f'fill="#fff" fill-opacity="{series[0] / FULL:.3f}">')
+            parts.append(f'    <animate attributeName="fill-opacity" calcMode="discrete" '
+                         f'dur="{dur:.2f}s" repeatCount="indefinite" '
+                         f'keyTimes="{key_times}" values="{values}"/>')
+            parts.append('  </rect>')
+    parts.append("</svg>")
+    ANIM.write_text("\n".join(parts) + "\n")
+    return animated
+
+
+def write_lottie(frames):
+    """The same two hours as a Lottie file, one shape layer, one group per LED.
+
+    For anywhere with a Lottie player: a web page, an app, LottieFiles, a design tool. GitHub does
+    not play Lottie in a README, which is why the SVG above exists as well. Opacity keyframes are
+    hold keyframes, so the dial steps once a minute the way the panel does rather than fading.
+    """
+    import json
+    size = 520
+    pitch, cell = cell_geometry(size)
+    fps = 1 / ANIM_SECONDS_PER_MINUTE          # one frame per minute
+    n = len(frames)
+    groups = []
+    for row in range(SIDE):
+        for col in range(SIDE):
+            if not has_led(col, row):
+                continue
+            cx = size * INSET + pitch * col + pitch / 2
+            cy = size * INSET + pitch * row + pitch / 2
+            series = [f[row][col] for f in frames]
+            rect = {"ty": "rc", "d": 1, "s": {"a": 0, "k": [cell, cell]},
+                    "p": {"a": 0, "k": [0, 0]}, "r": {"a": 0, "k": 0}}
+            base = {"ty": "fl", "c": {"a": 0, "k": [0.11, 0.11, 0.11, 1]}, "o": {"a": 0, "k": 100}}
+            if len(set(series)) == 1 and series[0] == 0:
+                items = [rect, base]
+            else:
+                if len(set(series)) == 1:
+                    o = {"a": 0, "k": round(100 * series[0] / FULL, 1)}
+                else:
+                    keys = []
+                    for i, v in enumerate(series):
+                        if i == 0 or v != series[i - 1]:
+                            keys.append({"t": i, "s": [round(100 * v / FULL, 1)], "h": 1})
+                    o = {"a": 1, "k": keys}
+                white = {"ty": "fl", "c": {"a": 0, "k": [1, 1, 1, 1]}, "o": o}
+                # Both fills apply to the one rect. Lottie draws a group's items top-down, so
+                # the white fill is listed first to sit above the grey underlay.
+                items = [rect, white, base]
+            groups.append({"ty": "gr", "it": items + [
+                {"ty": "tr", "p": {"a": 0, "k": [cx, cy]}, "a": {"a": 0, "k": [0, 0]},
+                 "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}}
+            ]})
+    doc = {
+        "v": "5.7.4", "fr": fps, "ip": 0, "op": n, "w": size, "h": size, "nm": "Orbit Dial",
+        "layers": [
+            {"ddd": 0, "ind": 1, "ty": 4, "nm": "dial", "sr": 1, "ip": 0, "op": n, "st": 0,
+             "ks": {"o": {"a": 0, "k": 100}, "p": {"a": 0, "k": [0, 0, 0]},
+                    "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
+                    "r": {"a": 0, "k": 0}},
+             "shapes": groups},
+            {"ddd": 0, "ind": 2, "ty": 1, "nm": "disc", "sr": 1, "ip": 0, "op": n, "st": 0,
+             "sw": size, "sh": size, "sc": "#000000",
+             "ks": {"o": {"a": 0, "k": 100}, "p": {"a": 0, "k": [size / 2, size / 2, 0]},
+                    "a": {"a": 0, "k": [size / 2, size / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
+                    "r": {"a": 0, "k": 0}}},
+        ],
+    }
+    LOTTIE.write_text(json.dumps(doc, separators=(",", ":")))
 
 
 if __name__ == "__main__":

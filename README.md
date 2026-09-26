@@ -1,13 +1,11 @@
 # Orbit Dial: a Glyph Matrix clock toy for the Nothing Phone (4a) Pro
 
-*[繁體中文](README.zh-HK.md)*
-
 An always-on clock for the Glyph Matrix on the back of the Nothing Phone (4a) Pro, written in
 Kotlin as a Glyph Toy. Twelve scales around the rim, the current hour lit, and a block orbiting
 inside them for the minute.
 
 <p align="center">
-  <img src="docs/orbit-dial.svg" width="360" alt="Orbit Dial showing 10:08 on a 13 by 13 Glyph Matrix">
+  <img src="docs/hero.webp" width="560" alt="Nothing Phone (4a) Pro, back view, showing Orbit Dial on the Glyph Matrix">
 </p>
 
 > Built for digital minimalists, this clock provides just enough information to keep you grounded
@@ -20,7 +18,7 @@ installed it exists only inside the Glyph interface.
 
 **To run it:** a Nothing Phone (4a) Pro. The toy registers for `Glyph.DEVICE_25111p`
 unconditionally and has been built and tested for that device only. On any other phone it logs a
-warning and will not show a dial.
+warning and carries on; what it does there is untested.
 
 **To build it:** JDK 17, Android SDK platform 37, and the Gradle wrapper in the repository
 (Gradle 9.7.1, Android Gradle Plugin 9.4.0). A stable Android Studio may ship an older AGP; use
@@ -62,7 +60,21 @@ in the environment). Without them it still builds and emits
 
 ## How it works
 
-### The device decides the shape of the app: AOD only, no Glyph Button
+### Reading the dial
+
+<p align="center">
+  <img src="docs/orbit-dial-hours.svg" width="360" alt="Orbit Dial over two hours, animated: the minute block orbits, then the lit scale moves to the next hour">
+</p>
+
+Two hours in fourteen seconds. The twelve scales are the hours, the lit one is now. The block
+inside them is the minute, orbiting once an hour, and it moves in steps because the ring it
+follows passes through only twelve cells (more on that below). When it comes round, the lit scale
+moves on by one.
+
+The animation is generated from the same numbers as the panel by `tools/make_preview.py`, which
+also writes it as `docs/orbit-dial.lottie.json` for anywhere with a Lottie player.
+
+### The device decides the shape of the app: AOD only, no Glyph Touch
 
 From the developer kit's device table:
 
@@ -70,7 +82,7 @@ From the developer kit's device table:
 |---|---|---|---|---|
 | Phone (4a) Pro | `Glyph.DEVICE_25111p` | 13 x 13 | No | AOD only |
 
-No button to react to and no carousel visit to animate for. The toy is chosen once as the
+No touch to react to and no carousel visit to animate for. The toy is chosen once as the
 always-on toy, declares `com.nothing.glyph.toy.aod_support` in its manifest, and then shows the
 time, redrawing when `EVENT_AOD` arrives. A clock is one of the few things that fits that brief
 rather than fighting it.
@@ -166,19 +178,20 @@ still for whole minutes at a time. For the shipped 2 x 2 mark:
 
 | orbit (cells) | distinct positions | LEDs changing per minute, on average | longest stall |
 |---|---|---|---|
-| 1.0 | 6 | 0.19 | 16 minutes |
-| 1.5 | 12 | 0.37 | 7 minutes |
-| 2.0 | 14 | 0.47 | 6 minutes |
-| 3.0 | 22 | 0.73 | 4 minutes |
+| 1.0 | 6 | 0.47 | 16 minutes |
+| 1.5 | 12 | 0.80 | 7 minutes |
+| 2.0 | 14 | 1.00 | 6 minutes |
+| 3.0 | 22 | 1.53 | 4 minutes |
 
 `ClockFace.minutePositions` computes the second column for whatever dial is loaded, and the
 service logs it at bind.
 
 Orbit 1.5 is shipped, which keeps the mark two cells clear of the hour scales. The mark is a
 2 x 2 block rather than one LED because one LED was too faint to find. A block does not travel
-further than a dot, since both follow the same rounded path and the block repeats a position
-slightly more often; what changes is that more LEDs switch on and off at each step, which makes
-the change easier to notice.
+further than a dot: at orbit 1.5 a single LED's centre shifts 0.27 cells a minute on average and
+the block's 0.20, since both follow the same rounded path and the block repeats a position
+slightly more often. What changes is that 0.80 LEDs switch on or off per minute rather than 0.53,
+which makes each step easier to notice.
 
 Size and orbit are coupled. A 2 x 2 clears the hour scales at orbit 1.5 and collides with them on
 24 minutes out of 60 at orbit 3.5; a 4 x 4 fills the middle of the disc and takes 16 of the 137
@@ -210,15 +223,18 @@ app/src/debug/kotlin/dev/glyphclock/
   TuneReceiver.kt                           changes the dial over adb
 tools/
   fetch_sdk.sh                              fetches the SDK aar, which is not committed
-  make_preview.py                           regenerates the icon and docs/orbit-dial.svg from Dial
+  make_preview.py                           regenerates the icon and everything in docs/ from Dial
   tuner.py                                  an HTTP front end for the adb tuning commands
 docs/
-  orbit-dial.svg                            the image above
+  hero.webp                                 the toy on the phone, at the top of this page
+  orbit-dial-hours.svg                      the animation above, two hours of the dial
+  orbit-dial.lottie.json                    the same animation as Lottie
+  orbit-dial.svg                            one frame of the dial, still
 ```
 
 `ClockFace` has no Android imports, so the dial can be exercised without a device. The icon and
-the image above are generated from `Dial`'s defaults rather than drawn, which is what keeps them
-showing the face the toy actually has.
+the images in `docs/` are generated from `Dial`'s defaults rather than drawn, which is what keeps
+them showing the face the toy actually has.
 
 ## Tuning
 
@@ -269,6 +285,8 @@ remix it, republish it, keep the notice.
 The Glyph Matrix SDK is Nothing's, under their EULA, which forbids redistribution and commercial
 use without written permission. The aar is not in this repository; `tools/fetch_sdk.sh` fetches
 it, and that licence binds whoever does. See `NOTICE.md`.
+
+The phone render in `docs/hero.webp` is Nothing's and is not covered by the MIT licence.
 
 Device geometry, identifiers and matrix lengths come from Nothing's public
 [GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit).
