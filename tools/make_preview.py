@@ -311,11 +311,17 @@ def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1):
                     "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
                     "r": {"a": 0, "k": 0}},
              "shapes": groups},
-            {"ddd": 0, "ind": 2, "ty": 1, "nm": "disc", "sr": 1, "ip": 0, "op": n, "st": 0,
-             "sw": size, "sh": size, "sc": "#000000",
-             "ks": {"o": {"a": 0, "k": 100}, "p": {"a": 0, "k": [size / 2, size / 2, 0]},
-                    "a": {"a": 0, "k": [size / 2, size / 2, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
-                    "r": {"a": 0, "k": 0}}},
+            # The panel as a black disc, transparent outside it, so the file drops onto any
+            # background (Nothing Playground draws it on a line-drawn phone).
+            {"ddd": 0, "ind": 2, "ty": 4, "nm": "disc", "sr": 1, "ip": 0, "op": n, "st": 0,
+             "ks": {"o": {"a": 0, "k": 100}, "p": {"a": 0, "k": [0, 0, 0]},
+                    "a": {"a": 0, "k": [0, 0, 0]}, "s": {"a": 0, "k": [100, 100, 100]},
+                    "r": {"a": 0, "k": 0}},
+             "shapes": [{"ty": "gr", "it": [
+                 {"ty": "el", "d": 1, "s": {"a": 0, "k": [size, size]}, "p": {"a": 0, "k": [0, 0]}},
+                 {"ty": "fl", "c": {"a": 0, "k": [0, 0, 0, 1]}, "o": {"a": 0, "k": 100}},
+                 {"ty": "tr", "p": {"a": 0, "k": [size / 2, size / 2]}, "a": {"a": 0, "k": [0, 0]},
+                  "s": {"a": 0, "k": [100, 100]}, "r": {"a": 0, "k": 0}, "o": {"a": 0, "k": 100}}]}]},
         ],
     }
     path.write_text(json.dumps(doc, separators=(",", ":")))
