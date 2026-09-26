@@ -43,13 +43,15 @@ The Glyph Matrix SDK is not in this repository. Nothing's licence forbids redist
 build fetches it:
 
 ```bash
-tools/fetch_sdk.sh        # clones the developer kit, copies glyph-matrix-sdk-2.0.aar into libs/
+tools/fetch_sdk.sh        # fetches glyph-matrix-sdk-2.0.aar from the developer kit into libs/
 ./gradlew assembleDebug   # -> app/build/outputs/apk/debug/glyph-orbit-dial-v0.1-debug.apk
 ```
 
-Or download the aar yourself from the
+The script is pinned to one commit of the
 [GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit)
-and place it at `libs/glyph-matrix-sdk-2.0.aar`.
+and checks the aar's SHA-256, so a clean checkout builds against the SDK the toy was tested
+with; the commit and hash are at the top of the script. Or place the aar at
+`libs/glyph-matrix-sdk-2.0.aar` yourself.
 
 `./gradlew assembleRelease` signs the release APK with the credentials in a `keystore.properties`
 at the project root (or `ORBIT_DIAL_STORE_FILE`, `_STORE_PASSWORD`, `_KEY_ALIAS`, `_KEY_PASSWORD`

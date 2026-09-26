@@ -10,6 +10,9 @@ build fetches it instead.
 tools/fetch_sdk.sh
 ```
 
+The script is pinned to one commit of the kit and checks the aar's SHA-256; both values are at
+the top of the script and move together.
+
 Source: https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit
 
 The same licence forbids commercial use without written permission from Nothing, and it binds
