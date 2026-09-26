@@ -17,12 +17,10 @@ installed it exists only inside the Glyph interface.
 ## Requirements
 
 **To run it:** a Nothing Phone (4a) Pro. The toy registers for `Glyph.DEVICE_25111p`
-unconditionally and has been built and tested for that device only. On any other phone it logs a
-warning and carries on; what it does there is untested.
+unconditionally and has been built and tested for that device only.
 
 **To build it:** JDK 17, Android SDK platform 37, and the Gradle wrapper in the repository
-(Gradle 9.7.1, Android Gradle Plugin 9.4.0). A stable Android Studio may ship an older AGP; use
-the wrapper from the command line if the IDE refuses the project.
+(Gradle 9.7.1, Android Gradle Plugin 9.4.0).
 
 ## Install
 
@@ -118,8 +116,6 @@ panel shows values of `2047`, which is 2^11 - 1.
 A toy written to the documented 0-255 therefore sends about an eighth of the value the stock ones
 do, and looked washed out beside them on the panel. This app's frames read
 `levels={614: 22, 2047: 6}` in the same log.
-
-Whether 2047 is the hardware ceiling or simply the value the stock toys chose is untested.
 
 ### A brightness ratio tuned on a screen does not transfer to the LEDs
 

@@ -260,7 +260,7 @@ def write_animated_svg(frames):
     return animated
 
 
-def write_lottie(frames):
+def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1):
     """The same two hours as a Lottie file, one shape layer, one group per LED.
 
     For anywhere with a Lottie player: a web page, an app, LottieFiles, a design tool. GitHub does
@@ -270,8 +270,8 @@ def write_lottie(frames):
     import json
     size = 520
     pitch, cell = cell_geometry(size)
-    fps = 1 / ANIM_SECONDS_PER_MINUTE          # one frame per minute
-    n = len(frames)
+    fps = fps or 1 / ANIM_SECONDS_PER_MINUTE   # by default one frame per minute
+    n = len(frames) * frames_per_minute
     groups = []
     for row in range(SIDE):
         for col in range(SIDE):
@@ -292,7 +292,8 @@ def write_lottie(frames):
                     keys = []
                     for i, v in enumerate(series):
                         if i == 0 or v != series[i - 1]:
-                            keys.append({"t": i, "s": [round(100 * v / FULL, 1)], "h": 1})
+                            keys.append({"t": i * frames_per_minute,
+                                         "s": [round(100 * v / FULL, 1)], "h": 1})
                     o = {"a": 1, "k": keys}
                 white = {"ty": "fl", "c": {"a": 0, "k": [1, 1, 1, 1]}, "o": o}
                 # Both fills apply to the one rect. Lottie draws a group's items top-down, so
@@ -317,7 +318,7 @@ def write_lottie(frames):
                     "r": {"a": 0, "k": 0}}},
         ],
     }
-    LOTTIE.write_text(json.dumps(doc, separators=(",", ":")))
+    path.write_text(json.dumps(doc, separators=(",", ":")))
 
 
 if __name__ == "__main__":
