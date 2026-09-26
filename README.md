@@ -113,10 +113,10 @@ The kit documents `GlyphMatrixObject.getBrightness()` as `(0-255, default: 255)`
 accurate for that class. It is not the range of the raw `int[]` handed to
 `GlyphMatrixManager.setMatrixFrame(int[])`, which reaches further. The stock toys use the wider
 range: reading `GlyphService: finalColors` in logcat while `com.nothing.hearthstone` is on the
-panel shows values of `2047`, which is 2<sup>11</sup> - 1.
+panel shows values of `2047`, which is 2^11 - 1.
 
-A toy written to the documented 0-255 therefore runs at about an eighth of the brightness of the
-stock ones and looks washed out beside them. This app's frames read
+A toy written to the documented 0-255 therefore sends about an eighth of the value the stock ones
+do, and looked washed out beside them on the panel. This app's frames read
 `levels={614: 22, 2047: 6}` in the same log.
 
 Whether 2047 is the hardware ceiling or simply the value the stock toys chose is untested.
@@ -166,10 +166,10 @@ for (k in 1 until length) {
 }
 ```
 
-Re-solving the polar position at a smaller radius is the obvious alternative and it looks wrong
-on the panel. At one o'clock, radius 6 gives `(9,1)` and radius 5 gives `(9,2)`: the same column,
-so the mark reads as a vertical pair rather than a stroke aimed at the middle. Stepping gives
-`(8,2)`, a diagonal, and the dial reads as twelve ticks.
+Re-solving the polar position at a smaller radius is the obvious alternative. At one o'clock,
+radius 6 gives `(9,1)` and radius 5 gives `(9,2)`: the same column, so the mark would read as a
+vertical pair rather than a stroke aimed at the middle. Stepping gives `(8,2)`, a diagonal, and
+on the panel the dial reads as twelve ticks.
 
 ### A 13 x 13 grid cannot show sixty minute positions
 
