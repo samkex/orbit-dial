@@ -28,7 +28,7 @@ Download `glyph-orbit-dial-<version>-release.apk` from the
 [Releases](../../releases) page, or build it as below. Then:
 
 ```bash
-adb install glyph-orbit-dial-v0.1-release.apk
+adb install glyph-orbit-dial-v0.2-release.apk
 ```
 
 On the phone: **Settings > Glyph Interface > Flip to Glyph > Always-on Glyph Toy**, choose
@@ -44,7 +44,7 @@ build fetches it:
 
 ```bash
 tools/fetch_sdk.sh        # fetches glyph-matrix-sdk-2.0.aar from the developer kit into libs/
-./gradlew assembleDebug   # -> app/build/outputs/apk/debug/glyph-orbit-dial-v0.1-debug.apk
+./gradlew assembleDebug   # -> app/build/outputs/apk/debug/glyph-orbit-dial-v0.2-debug.apk
 ./gradlew testDebugUnitTest   # the dial's numbers, as tests, on the JVM
 ```
 
@@ -58,7 +58,7 @@ tests and a debug build on every push.
 `./gradlew assembleRelease` signs the release APK with the credentials in a `keystore.properties`
 at the project root (or `ORBIT_DIAL_STORE_FILE`, `_STORE_PASSWORD`, `_KEY_ALIAS`, `_KEY_PASSWORD`
 in the environment). Without them it still builds and emits
-`glyph-orbit-dial-v0.1-release-unsigned.apk`, which a phone will not install.
+`glyph-orbit-dial-v0.2-release-unsigned.apk`, which a phone will not install.
 
 ## How it works
 
@@ -75,6 +75,11 @@ moves on by one.
 
 The animation is generated from the same numbers as the panel by `tools/make_preview.py`, which
 also writes it as `docs/orbit-dial.lottie.json` for anywhere with a Lottie player.
+
+Everything below described as measured was measured on a Nothing Phone (4a) Pro on Nothing OS
+build C5.0-260902-1559 (Android 17, security patch 2026-09-01), Glyph service
+`com.nothing.hearthstone` 3.6.0, against the developer kit at commit `999b1143`. Observed
+firmware behaviour is not an API contract; the kit's own statements are quoted as such.
 
 ### One frame
 
@@ -242,7 +247,7 @@ Edit `Dial.DEFAULT` in `Dial.kt`, then:
 ```bash
 python3 tools/make_preview.py   # regenerates the list icon and docs/ from the new numbers
 ./gradlew assembleDebug
-adb install -r app/build/outputs/apk/debug/glyph-orbit-dial-v0.1-debug.apk
+adb install -r app/build/outputs/apk/debug/glyph-orbit-dial-v0.2-debug.apk
 ```
 
 The icon and the images in `docs/` are generated from `Dial` rather than drawn, so they always

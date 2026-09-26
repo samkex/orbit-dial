@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins { alias(libs.plugins.android.application) }
 
-val appVersionName = "0.1"
+val appVersionName = "0.2"
 
 // Release signing credentials. Never in the repo: keystore.properties is gitignored and the
 // keystore itself lives outside the working tree (see README / keystore.properties storeFile).
@@ -38,7 +38,7 @@ android {
         applicationId = "com.kexsam.orbitdial"
         minSdk        = libs.versions.minSdk.get().toInt()
         targetSdk     = libs.versions.targetSdk.get().toInt()
-        versionCode   = 1
+        versionCode   = 2
         versionName   = appVersionName
     }
 
