@@ -1,6 +1,5 @@
 package com.kexsam.orbitdial
 
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -134,6 +133,5 @@ object ClockFace {
     }
 
     /** True when two frames would look identical, so an unchanged minute costs no push. */
-    fun same(a: IntArray?, b: IntArray): Boolean =
-        a != null && a.size == b.size && a.indices.all { abs(a[it] - b[it]) == 0 }
+    fun same(a: IntArray?, b: IntArray): Boolean = a?.contentEquals(b) == true
 }

@@ -273,7 +273,10 @@ POST /set   {"full": 2047, "dim": 614, "scale_length": 2, "minute_orbit": 1.5, "
 GET  /      {"ok": true, "serial": "…", "fields": [...]}
 ```
 
-Send only the fields you want to change. Once a value is right, put it in `Dial.DEFAULT`.
+Send only the fields you want to change. The service clamps whatever arrives to what the panel
+can draw (`Dial.clamped`: brightness 0 to 2047, `dim` no brighter than `full`, sizes and orbit
+within the disc), so a stray value cannot make the panel lie. Once a value is right, put it in
+`Dial.DEFAULT`.
 `TuneReceiver` and its manifest entry are both in `src/debug`, so a release build has neither
 and its dial cannot be moved.
 

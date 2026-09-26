@@ -41,8 +41,31 @@ data class Dial(
      */
     val minuteSize: Int = 2,
 ) {
+    /**
+     * This dial kept inside what a [side]-wide panel can draw.
+     *
+     * A debug build can write any value over adb; rendering goes through this so a stray one
+     * (negative brightness, a zero-sized mark, a non-finite orbit) cannot make the panel lie
+     * about what a setting looks like. Applied by the service, not by the receiver, so adb and
+     * `tools/tuner.py` cannot disagree.
+     */
+    fun clamped(side: Int): Dial {
+        val fullOk = full.coerceIn(0, MAX_BRIGHTNESS)
+        return Dial(
+            full = fullOk,
+            dim = dim.coerceIn(0, fullOk),
+            scaleLength = scaleLength.coerceIn(1, maxOf(1, side / 2)),
+            minuteOrbit = if (minuteOrbit.isFinite()) minuteOrbit.coerceIn(0.0, side / 2.0)
+                          else DEFAULT.minuteOrbit,
+            minuteSize = minuteSize.coerceIn(1, side),
+        )
+    }
+
     companion object {
         val DEFAULT = Dial()
+
+        /** The top of `setMatrixFrame`'s range on the panel, which is 2^11 - 1, not 255. */
+        const val MAX_BRIGHTNESS = 2047
 
         const val PREFS = "dial"
         const val KEY_FULL = "full"

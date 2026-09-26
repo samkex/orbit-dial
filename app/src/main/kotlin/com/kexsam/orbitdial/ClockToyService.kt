@@ -35,6 +35,8 @@ class ClockToyService : Service() {
     private var last: IntArray? = null
     private var boundAt = 0L
     private var dial = Dial.DEFAULT
+    /** True between onBind and onUnbind; an SDK callback that lands outside that is ignored. */
+    private var active = false
 
     /* A debug build can change the dial over adb while the toy is on the panel. Watching the
        preferences rather than polling them means a slider move reaches the LEDs in the time it
@@ -61,8 +63,8 @@ class ClockToyService : Service() {
 
     override fun onBind(intent: Intent?): IBinder {
         boundAt = System.currentTimeMillis()
-        val isAod = runCatching { intent?.getBooleanExtra(EXTRA_AOD, false) == true }.getOrDefault(false)
-        Log.i(TAG, "onBind action=${intent?.action} isAod=$isAod")
+        active = true
+        Log.i(TAG, "onBind action=${intent?.action}")
 
         dial = Dial.load(this)
         Dial.prefs(this).registerOnSharedPreferenceChangeListener(onDialChanged)
@@ -71,6 +73,10 @@ class ClockToyService : Service() {
             matrix = gm
             gm.init(object : GlyphMatrixManager.Callback {
                 override fun onServiceConnected(name: android.content.ComponentName?) {
+                    if (!active) {
+                        Log.w(TAG, "glyph service connected after unbind, ignored")
+                        return
+                    }
                     /* Registered for the (4a) Pro unconditionally. The toy has only ever been
                        built and tested for that device, so any other one is reported rather than
                        quietly assumed to behave the same. */
@@ -83,12 +89,13 @@ class ClockToyService : Service() {
                     side = Common.getDeviceMatrixLength()
                     Log.i(TAG, "registered $target = $registered, matrix side $side, " +
                         "${ClockFace.ledCount(side)} LEDs, " +
-                        "${ClockFace.minutePositions(side, dial)} minute positions")
+                        "${ClockFace.minutePositions(side, dial.clamped(side))} minute positions")
                     Log.i(TAG, "dial: $dial")
                     draw("bind")
                 }
                 override fun onServiceDisconnected(name: android.content.ComponentName?) {
                     Log.w(TAG, "glyph service disconnected")
+                    last = null                 // whatever comes back gets a full frame
                 }
             })
         }
@@ -97,6 +104,7 @@ class ClockToyService : Service() {
 
     override fun onUnbind(intent: Intent?): Boolean {
         Log.i(TAG, "onUnbind after ${System.currentTimeMillis() - boundAt} ms")
+        active = false
         runCatching { Dial.prefs(this).unregisterOnSharedPreferenceChangeListener(onDialChanged) }
         runCatching { matrix?.unInit() }.onFailure { Log.w(TAG, "unInit failed: $it") }
         matrix = null
@@ -122,7 +130,9 @@ class ClockToyService : Service() {
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR)
         val minute = now.get(Calendar.MINUTE)
-        val frame = ClockFace.render(hour, minute, side, dial)
+        val drawn = dial.clamped(side)
+        if (drawn != dial) Log.w(TAG, "dial clamped to what the panel can draw: $drawn")
+        val frame = ClockFace.render(hour, minute, side, drawn)
 
         if (ClockFace.same(last, frame)) {
             Log.i(TAG, "$reason: %02d:%02d unchanged, nothing pushed".format(hour, minute))
@@ -139,8 +149,5 @@ class ClockToyService : Service() {
 
     private companion object {
         const val TAG = "OrbitDial"
-
-        /** Undocumented, and the only way to tell an always-on bind from a carousel one. */
-        const val EXTRA_AOD = "isAod"
     }
 }
