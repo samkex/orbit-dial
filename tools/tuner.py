@@ -15,8 +15,8 @@ How it works, and the one part that is not obvious:
     client  --POST /set-->  this server  --adb-->  TuneReceiver  --prefs-->  the service
 
 The broadcast **must name the component explicitly**. A manifest-declared receiver does not get
-implicit broadcasts on modern Android, so `am broadcast -a dev.glyphclock.TUNE` completes with
-`result=0` and silently does nothing; `-n dev.glyphclock/.TuneReceiver` is what makes it arrive.
+implicit broadcasts on modern Android, so `am broadcast -a com.kexsam.orbitdial.TUNE` completes with
+`result=0` and silently does nothing; `-n com.kexsam.orbitdial/.TuneReceiver` is what makes it arrive.
 
 The receiver is in the debug manifest only, so this cannot touch a release build.
 """
@@ -29,8 +29,8 @@ import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-COMPONENT = "dev.glyphclock/.TuneReceiver"
-ACTION = "dev.glyphclock.TUNE"
+COMPONENT = "com.kexsam.orbitdial/.TuneReceiver"
+ACTION = "com.kexsam.orbitdial.TUNE"
 PORT = 8732
 
 # name -> (adb extra flag, python type). Send whichever of these you want to change.

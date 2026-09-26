@@ -9,7 +9,7 @@
             android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
-                <action android:name="dev.glyphclock.TUNE" />
+                <action android:name="com.kexsam.orbitdial.TUNE" />
             </intent-filter>
         </receiver>
     </application>

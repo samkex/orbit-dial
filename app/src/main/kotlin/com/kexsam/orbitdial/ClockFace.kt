@@ -1,4 +1,4 @@
-package dev.glyphclock
+package com.kexsam.orbitdial
 
 import kotlin.math.abs
 import kotlin.math.cos

@@ -1,4 +1,4 @@
-package dev.glyphclock
+package com.kexsam.orbitdial
 
 import android.content.Context
 import android.content.SharedPreferences

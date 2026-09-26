@@ -1,4 +1,4 @@
-package dev.glyphclock
+package com.kexsam.orbitdial
 
 import android.app.Service
 import android.content.Intent

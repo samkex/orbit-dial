@@ -34,7 +34,7 @@ adb install glyph-orbit-dial-v0.1-release.apk
 On the phone: **Settings > Glyph Interface > Flip to Glyph > Always-on Glyph Toy**, choose
 **Orbit Dial**, and turn the phone face down.
 
-To remove it: `adb uninstall dev.glyphclock`. The app changes no system settings, so there is
+To remove it: `adb uninstall com.kexsam.orbitdial`. The app changes no system settings, so there is
 nothing else to undo.
 
 ## Build from source
@@ -201,7 +201,7 @@ ones. An interface-free Glyph Toy is viable.
 
 ```
 app/src/main/AndroidManifest.xml            the toy service, its metadata, no activity
-app/src/main/kotlin/dev/glyphclock/
+app/src/main/kotlin/com/kexsam/orbitdial/
   ClockFace.kt                              the dial as one frame of brightness; no Android imports
   Dial.kt                                   the five numbers that decide what it looks like
   ClockToyService.kt                        the bound Service the system talks to
@@ -209,7 +209,7 @@ app/src/main/res/
   drawable/ic_toy_preview.xml               the Glyph Toys list icon, generated
   values/strings.xml                        the toy's name and summary
 app/src/debug/AndroidManifest.xml           adds TuneReceiver to debug builds only
-app/src/debug/kotlin/dev/glyphclock/
+app/src/debug/kotlin/com/kexsam/orbitdial/
   TuneReceiver.kt                           changes the dial over adb
 tools/
   fetch_sdk.sh                              fetches the SDK aar, which is not committed
@@ -244,14 +244,14 @@ show the face the toy actually has.
 A **debug** build can be changed over adb, without a rebuild, while the dial is showing:
 
 ```bash
-adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ei dim 614
-adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ef minute_orbit 1.5
-adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ez reset true
+adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei dim 614
+adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ef minute_orbit 1.5
+adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ez reset true
 ```
 
 The extras are `full`, `dim`, `scale_length`, `minute_size` (`--ei`) and `minute_orbit` (`--ef`);
 `reset` returns to `Dial.DEFAULT`. The component must be named: a manifest-declared receiver
-does not get implicit broadcasts on current Android, so `am broadcast -a dev.glyphclock.TUNE`
+does not get implicit broadcasts on current Android, so `am broadcast -a com.kexsam.orbitdial.TUNE`
 alone completes and does nothing.
 
 `tools/tuner.py` puts an HTTP endpoint in front of those commands, for a slider or any other

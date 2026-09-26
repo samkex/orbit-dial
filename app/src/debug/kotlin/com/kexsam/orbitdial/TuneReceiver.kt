@@ -1,4 +1,4 @@
-package dev.glyphclock
+package com.kexsam.orbitdial
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -9,9 +9,9 @@ import android.util.Log
  * Changes the dial from adb, while the toy is on the panel. Debug builds only.
  *
  * ```
- * adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ei dim 700
- * adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ei full 2047 --ef minute_orbit 2.5
- * adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ez reset true
+ * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei dim 700
+ * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei full 2047 --ef minute_orbit 2.5
+ * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ez reset true
  * ```
  *
  * The component must be named with `-n`. A manifest-declared receiver does not get implicit

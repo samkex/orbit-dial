@@ -31,11 +31,11 @@ val releaseSigningAvailable =
     file(signStoreFile!!).exists()
 
 android {
-    namespace  = "dev.glyphclock"
+    namespace  = "com.kexsam.orbitdial"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "dev.glyphclock"
+        applicationId = "com.kexsam.orbitdial"
         minSdk        = libs.versions.minSdk.get().toInt()
         targetSdk     = libs.versions.targetSdk.get().toInt()
         versionCode   = 1

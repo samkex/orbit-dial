@@ -28,7 +28,7 @@ import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FACE = ROOT / "app/src/main/kotlin/dev/glyphclock/Dial.kt"
+FACE = ROOT / "app/src/main/kotlin/com/kexsam/orbitdial/Dial.kt"
 OUT = ROOT / "app/src/main/res/drawable/ic_toy_preview.xml"
 DOC = ROOT / "docs/orbit-dial.svg"       # the README image, from the same numbers
 ANIM = ROOT / "docs/orbit-dial-hours.svg" # the same dial over two hours, animated, for the README
