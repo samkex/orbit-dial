@@ -20,10 +20,8 @@ data class Dial(
     /**
      * The other eleven scales.
      *
-     * Settled on the panel over three tries: 409 read as off and left one lit mark alone on a
-     * dark disc, 800 was clearly visible, 614 is where it sits. The LEDs' response near the
-     * bottom of their range is not a display's, so this is a hardware value and not a
-     * percentage to be recomputed.
+     * Settled by looking at the panel. The LEDs' response near the bottom of their range is not
+     * a display's, so this is a hardware value and not a percentage to be recomputed.
      */
     val dim: Int = 614,
     /** Cells per scale, counted inward from the rim. */
@@ -38,10 +36,8 @@ data class Dial(
     /**
      * The minute mark's side, in cells.
      *
-     * A block rather than a dot, because one LED was too faint to find. It does not travel further:
-     * at orbit 1.5 a single LED's centre shifts 0.27 cells a minute on average and a 2 by 2's 0.20.
-     * What a block does is change more LEDs per step, 0.80 a minute against 0.53, so each step is
-     * easier to notice.
+     * A block, because a single LED is too faint to pick out on this panel. At orbit 1.5 the
+     * 2 by 2 changes 0.80 LEDs a minute on average, which is what makes each step noticeable.
      */
     val minuteSize: Int = 2,
 ) {
