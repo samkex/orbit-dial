@@ -119,15 +119,9 @@ do, and looked washed out beside them on the panel. This app's frames read
 
 ### A brightness ratio tuned on a screen does not transfer to the LEDs
 
-The dial's quiet scales were designed at 20 per cent of full in a browser preview. On the panel
-that read as off: the eleven inactive scales disappeared and the dial became one lit mark alone
-on a dark disc. The value was settled by looking at the phone.
-
-| | of 2047 | on the panel |
-|---|---|---|
-| 20 per cent | 409 | scales read as off |
-| 30 per cent | 614 | shipped |
-| 39 per cent | 800 | clearly visible, brighter than wanted |
+The dial's quiet scales were designed at 409 (20 per cent of 2047) in a browser preview. On the
+panel that read as off: the eleven inactive scales disappeared and the dial became one lit mark
+alone on a dark disc. The shipped value, 614, was settled by looking at the phone.
 
 The LEDs' response near the bottom of their range is not a display's. Treat any brightness
 fraction taken from a mock as a starting point, not a value. `tools/tuner.py` exists so that
