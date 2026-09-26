@@ -72,6 +72,25 @@ moves on by one.
 The animation is generated from the same numbers as the panel by `tools/make_preview.py`, which
 also writes it as `docs/orbit-dial.lottie.json` for anywhere with a Lottie player.
 
+### One frame
+
+`ClockFace.render(hour, minute, side, dial)` returns an `IntArray` of `side * side` brightness
+values, row-major, one per grid position, 0 for off. It draws the twelve scales at `dim`, the
+current hour's scale at `full`, then the minute mark at `full`; where they overlap the brighter
+value wins, and positions with no LED behind them are dropped. The service hands that array to
+`GlyphMatrixManager.setMatrixFrame` when `EVENT_AOD` arrives, unless it is identical to the last
+one. `ClockFace` has no Android imports, so the dial can be exercised without a device.
+
+The five numbers it draws from are the fields of `Dial`:
+
+| | shipped | what it does |
+|---|---|---|
+| `full` | 2047 | the current hour and the minute mark |
+| `dim` | 614 | the other eleven scales |
+| `scaleLength` | 2 | cells per scale, counted inward from the rim |
+| `minuteOrbit` | 1.5 | the minute mark's ring, in cells from the centre |
+| `minuteSize` | 2 | the minute mark's side, in cells |
+
 ### The device decides the shape of the app: AOD only, no Glyph Touch
 
 From the developer kit's device table:
@@ -111,21 +130,19 @@ The kit documents `GlyphMatrixObject.getBrightness()` as `(0-255, default: 255)`
 accurate for that class. It is not the range of the raw `int[]` handed to
 `GlyphMatrixManager.setMatrixFrame(int[])`, which reaches further. The stock toys use the wider
 range: reading `GlyphService: finalColors` in logcat while `com.nothing.hearthstone` is on the
-panel shows values of `2047`, which is 2^11 - 1.
+panel shows values of `2047`, which is 2^11 - 1. A toy written to the documented 0-255 sends
+about an eighth of the value the stock ones do.
 
-A toy written to the documented 0-255 therefore sends about an eighth of the value the stock ones
-do, and looked washed out beside them on the panel. This app's frames read
-`levels={614: 22, 2047: 6}` in the same log.
+The same log line shows what your own toy sends. This app's frames read
+`levels={614: 22, 2047: 6}`.
 
-### A brightness ratio tuned on a screen does not transfer to the LEDs
+### Brightness is set on the panel, not on a screen
 
-The dial's quiet scales were first set as a fraction of full in a browser preview. On the panel
-that read as off: the eleven inactive scales disappeared and the dial became one lit mark alone
-on a dark disc. The shipped value, 614, was settled by looking at the phone.
-
-The LEDs' response near the bottom of their range is not a display's. Treat any brightness
-fraction taken from a mock as a starting point, not a value. `tools/tuner.py` exists so that
-starting point can be adjusted on the panel without a rebuild.
+The LEDs' response near the bottom of their range is not a display's, so a fraction of full that
+looks right in a mock can read as off on the panel, and a dial designed as twelve scales becomes
+one lit mark alone on a dark disc. `dim`, the eleven quiet scales, is 614 (30 per cent of 2047)
+and was settled by looking at the phone. Treat any brightness taken from a mock as a starting
+point; the debug build lets you move it on the panel without a rebuild (see Remix).
 
 ### `EVENT_AOD` lands on the wall-clock minute
 
@@ -167,8 +184,8 @@ positions in an hour, changes 0.80 LEDs a minute on average, and stands still fo
 minutes. `ClockFace.minutePositions` computes the position count for whatever dial is loaded,
 and the service logs it at bind.
 
-Orbit 1.5 keeps the mark two cells clear of the hour scales. The mark is a 2 x 2 block rather
-than one LED because one LED was too faint to find.
+Orbit 1.5 keeps the mark two cells clear of the hour scales. The mark is 2 x 2 because a single
+LED is too faint to pick out on this panel.
 
 ### A toy service with no launcher activity is still listed
 
@@ -205,21 +222,24 @@ docs/
   orbit-dial.svg                            one frame of the dial, still
 ```
 
-`ClockFace` has no Android imports, so the dial can be exercised without a device. The icon and
-the images in `docs/` are generated from `Dial`'s defaults rather than drawn, which is what keeps
-them showing the face the toy actually has.
+## Remix
 
-## Tuning
+MIT licensed: use it, change it, republish it, keep the notice.
 
-Every dimension of the dial is a field on `Dial`.
+### Change the face
 
-| | shipped | what it does |
-|---|---|---|
-| `full` | 2047 | the current hour and the minute mark |
-| `dim` | 614 | the other eleven scales |
-| `scaleLength` | 2 | cells per scale, counted inward from the rim |
-| `minuteOrbit` | 1.5 | the minute mark's ring, in cells from the centre |
-| `minuteSize` | 2 | the minute mark's side, in cells |
+Edit `Dial.DEFAULT` in `Dial.kt`, then:
+
+```bash
+python3 tools/make_preview.py   # regenerates the list icon and docs/ from the new numbers
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/glyph-orbit-dial-v0.1-debug.apk
+```
+
+The icon and the images in `docs/` are generated from `Dial` rather than drawn, so they always
+show the face the toy actually has.
+
+### Try values on the panel first
 
 A **debug** build can be changed over adb, without a rebuild, while the dial is showing:
 
@@ -229,12 +249,10 @@ adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --
 adb shell am broadcast -n dev.glyphclock/.TuneReceiver -a dev.glyphclock.TUNE --ez reset true
 ```
 
-The component must be named. A manifest-declared receiver does not get implicit broadcasts on
-current Android, so `am broadcast -a dev.glyphclock.TUNE` reports `Broadcast completed: result=0`
-and does nothing.
-
-`TuneReceiver` and its manifest entry are both in `src/debug`, so a release build has neither and
-its dial cannot be moved.
+The extras are `full`, `dim`, `scale_length`, `minute_size` (`--ei`) and `minute_orbit` (`--ef`);
+`reset` returns to `Dial.DEFAULT`. The component must be named: a manifest-declared receiver
+does not get implicit broadcasts on current Android, so `am broadcast -a dev.glyphclock.TUNE`
+alone completes and does nothing.
 
 `tools/tuner.py` puts an HTTP endpoint in front of those commands, for a slider or any other
 client:
@@ -248,7 +266,23 @@ POST /set   {"full": 2047, "dim": 614, "scale_length": 2, "minute_orbit": 1.5, "
 GET  /      {"ok": true, "serial": "…", "fields": [...]}
 ```
 
-Send only the fields you want to change.
+Send only the fields you want to change. Once a value is right, put it in `Dial.DEFAULT`.
+`TuneReceiver` and its manifest entry are both in `src/debug`, so a release build has neither
+and its dial cannot be moved.
+
+### Change the drawing
+
+`ClockFace.render` is the whole face. `hasLed` is the mask, `scaleRay` draws a scale, and
+anything that fills a row-major `IntArray` of `side * side` values from 0 to 2047 will show.
+`ClockFace` has no Android imports, so a new face can be checked in a plain Kotlin test before it
+goes near a phone.
+
+### Make it yours
+
+Change `applicationId` and `namespace` in `app/build.gradle.kts` so your build installs beside
+this one, the three strings in `res/values/strings.xml` (`toy_name` and `toy_summary` are what
+the Glyph Toys list shows), and sign the release with your own key as described under Build from
+source.
 
 ## Licence and notices
 
