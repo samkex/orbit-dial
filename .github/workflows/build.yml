@@ -1,0 +1,23 @@
+# Proves a clean checkout still builds and the dial still draws what the README says.
+# Debug only: release signing stays on Keith's machine.
+name: build
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Fetch the Glyph Matrix SDK (pinned commit, checked hash)
+        run: tools/fetch_sdk.sh
+      - name: Accept Android SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+      - name: Test and build
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug

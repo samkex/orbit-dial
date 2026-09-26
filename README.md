@@ -52,7 +52,8 @@ The script is pinned to one commit of the
 [GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit)
 and checks the aar's SHA-256, so a clean checkout builds against the SDK the toy was tested
 with; the commit and hash are at the top of the script. Or place the aar at
-`libs/glyph-matrix-sdk-2.0.aar` yourself.
+`libs/glyph-matrix-sdk-2.0.aar` yourself. A GitHub Actions workflow runs the same fetch, the
+tests and a debug build on every push.
 
 `./gradlew assembleRelease` signs the release APK with the credentials in a `keystore.properties`
 at the project root (or `ORBIT_DIAL_STORE_FILE`, `_STORE_PASSWORD`, `_KEY_ALIAS`, `_KEY_PASSWORD`
@@ -218,6 +219,7 @@ app/src/test/kotlin/com/kexsam/orbitdial/
 app/src/debug/AndroidManifest.xml           adds TuneReceiver to debug builds only
 app/src/debug/kotlin/com/kexsam/orbitdial/
   TuneReceiver.kt                           changes the dial over adb
+.github/workflows/build.yml                 CI: fetch the pinned SDK, test, debug build
 tools/
   fetch_sdk.sh                              fetches the SDK aar, which is not committed
   make_preview.py                           regenerates the icon and everything in docs/ from Dial
