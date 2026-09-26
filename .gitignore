@@ -1,0 +1,17 @@
+# Build output
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+.DS_Store
+
+# Fetched, never redistributed: see libs/README.md and NOTICE.md
+libs/*.aar
+
+# Release signing. The keystore lives outside the working tree; these hold its credentials.
+keystore.properties
+*.jks
+*.keystore

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug only. Merged into debug builds and absent from release, so the shipped app has no way
+     to change its dial and no exported receiver at all. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <receiver
+            android:name=".TuneReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="dev.glyphclock.TUNE" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

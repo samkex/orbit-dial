@@ -1,0 +1,12 @@
+# No Compose: this app has no interface at all, so it needs no UI toolkit.
+
+[versions]
+agp        = "9.4.0"
+compileSdk = "37"
+minSdk     = "33"   # the Glyph Matrix SDK aar declares minSdkVersion 33
+targetSdk  = "37"
+
+[libraries]
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }

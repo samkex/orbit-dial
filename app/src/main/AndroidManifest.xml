@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Required to drive the Glyph Matrix. -->
+    <uses-permission android:name="com.nothing.ketchum.permission.ENABLE" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_toy_preview"
+        android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        <!-- There is no activity in this manifest, on purpose. The app has no interface and
+             appears only in the Glyph interface once installed. The kit's "guide the user to
+             the Toys manager" pattern is a recommendation for toys that need setting up; this
+             one has nothing to set up, so the toy service is the whole app.
+
+             An app that has never been launched sits in Android's stopped state, and
+             components of a stopped package are normally filtered out of intent resolution.
+             Measured on a (4a) Pro: the Glyph service lists this toy anyway. -->
+
+        <!-- As Nothing's own sample has it. Left at the sample's value because that is the
+             only configuration this toy has been tested with. -->
+        <meta-data
+            android:name="NothingKey"
+            android:value="test" />
+
+        <service
+            android:name=".ClockToyService"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="com.nothing.glyph.TOY" />
+            </intent-filter>
+
+            <!-- Required: without these two the toy does not appear in the Glyph Toys list. -->
+            <meta-data
+                android:name="com.nothing.glyph.toy.name"
+                android:resource="@string/toy_name" />
+            <meta-data
+                android:name="com.nothing.glyph.toy.image"
+                android:resource="@drawable/ic_toy_preview" />
+            <meta-data
+                android:name="com.nothing.glyph.toy.summary"
+                android:resource="@string/toy_summary" />
+
+            <!-- Required on DEVICE_25111p, which supports AOD toys only. -->
+            <meta-data
+                android:name="com.nothing.glyph.toy.aod_support"
+                android:value="1" />
+
+            <!-- No toy.longpress: the (4a) Pro has no Glyph Touch, so there is nothing to
+                 declare. No toy.introduction either, since that points at an activity and this
+                 app has none. -->
+        </service>
+
+    </application>
+</manifest>

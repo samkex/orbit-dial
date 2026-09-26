@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- There is no launcher entry, so these three strings and the preview image are the only
+         places the app names itself to anyone. app_name appears in Settings, Apps; the other
+         two are what the Glyph Toys list shows. -->
+    <string name="app_name">Orbit Dial</string>
+    <string name="toy_name">Orbit Dial</string>
+    <!-- Trimmed to a summary: this field sits under the toy's name in a list and is read at a
+         glance. The full sentence is in the README. -->
+    <string name="toy_summary">Just enough to keep you in the present, without the noise of seconds and numbers.</string>
+</resources>
