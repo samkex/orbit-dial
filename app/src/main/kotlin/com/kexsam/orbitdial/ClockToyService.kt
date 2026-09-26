@@ -138,7 +138,7 @@ class ClockToyService : Service() {
     }
 
     private companion object {
-        const val TAG = "GlyphClock"
+        const val TAG = "OrbitDial"
 
         /** Undocumented, and the only way to tell an always-on bind from a carousel one. */
         const val EXTRA_AOD = "isAod"

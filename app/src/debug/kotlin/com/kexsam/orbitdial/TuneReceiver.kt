@@ -59,6 +59,6 @@ class TuneReceiver : BroadcastReceiver() {
     }
 
     private companion object {
-        const val TAG = "GlyphClock"
+        const val TAG = "OrbitDial"
     }
 }
