@@ -79,6 +79,12 @@ class ClockFaceTest {
     @Test fun `the shipped block lands on twelve distinct positions in an hour`() =
         assertEquals(12, ClockFace.minutePositions(side, dial))
 
+    @Test fun `minute positions count what is visible, not the block's footprint`() {
+        // At orbit 7.0 a 2 x 2 spends part of the hour beyond the grid and the disc: 42 distinct
+        // footprints, 33 of them distinct on the panel.
+        assertEquals(33, ClockFace.minutePositions(side, dial.copy(minuteOrbit = 7.0)))
+    }
+
     @Test fun `on average 0_80 LEDs change per minute and the longest stall is seven minutes`() {
         val frames = (0 until 60).map { ClockFace.render(10, it, side) }
         var changes = 0

@@ -123,7 +123,10 @@ object ClockFace {
             val top = (fy - (dial.minuteSize - 1) / 2.0).roundToInt()
             val cells = mutableSetOf<Pair<Int, Int>>()
             for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
-                cells += (left + dx) to (top + dy)
+                val c = left + dx
+                val r = top + dy
+                // The same filter render applies: a cell off the grid or with no LED is not a position.
+                if (c in 0 until side && r in 0 until side && hasLed(c, r, side)) cells += c to r
             }
             seen += cells
         }
