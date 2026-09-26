@@ -302,11 +302,3 @@ Device geometry, identifiers and matrix lengths come from Nothing's public
 
 The [GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit)
 for the SDK, the device table and the LED allocation diagram.
-
-Other open-source Glyph Matrix toys worth reading, several of which target the same device:
-[glyph-life](https://github.com/Yuma-Eimymk2/glyph-life),
-[Toyph](https://github.com/antonvidishchev/toyph),
-[GlyphStopwatch](https://github.com/Sturdy7435/GlyphStopwatch),
-[GlyphMarquee](https://github.com/bluehomewu/GlyphMarquee),
-[GlyphMatrix-AODGeekBox](https://github.com/danissomo/GlyphMatrix-AODGeekBox),
-[GlyphMatrixEditor](https://github.com/pauwma/GlyphMatrixEditor).
