@@ -5,8 +5,10 @@ agp        = "9.4.0"
 compileSdk = "37"
 minSdk     = "33"   # the Glyph Matrix SDK aar declares minSdkVersion 33
 targetSdk  = "37"
+junit      = "4.13.2"
 
 [libraries]
+junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

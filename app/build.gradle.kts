@@ -78,6 +78,9 @@ kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 dependencies {
     // Glyph Matrix SDK. Not in the repo: Nothing's EULA forbids redistribution. See libs/README.md.
     implementation(files("../libs/glyph-matrix-sdk-2.0.aar"))
+
+    // ClockFace has no Android imports, so the dial is tested on the JVM.
+    testImplementation(libs.junit)
 }
 
 if (!releaseSigningAvailable) {

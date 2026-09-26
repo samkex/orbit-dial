@@ -45,6 +45,7 @@ build fetches it:
 ```bash
 tools/fetch_sdk.sh        # fetches glyph-matrix-sdk-2.0.aar from the developer kit into libs/
 ./gradlew assembleDebug   # -> app/build/outputs/apk/debug/glyph-orbit-dial-v0.1-debug.apk
+./gradlew testDebugUnitTest   # the dial's numbers, as tests, on the JVM
 ```
 
 The script is pinned to one commit of the
@@ -81,7 +82,9 @@ values, row-major, one per grid position, 0 for off. It draws the twelve scales 
 current hour's scale at `full`, then the minute mark at `full`; where they overlap the brighter
 value wins, and positions with no LED behind them are dropped. The service hands that array to
 `GlyphMatrixManager.setMatrixFrame` when `EVENT_AOD` arrives, unless it is identical to the last
-one. `ClockFace` has no Android imports, so the dial can be exercised without a device.
+one. `ClockFace` has no Android imports, so the dial is tested on the JVM: `ClockFaceTest` holds the
+numbers this page states (137 LEDs, 12 minute positions, 0.80 LEDs a minute, the one o'clock
+diagonal) and five golden frames.
 
 The five numbers it draws from are the fields of `Dial`:
 
@@ -210,6 +213,8 @@ app/src/main/kotlin/com/kexsam/orbitdial/
 app/src/main/res/
   drawable/ic_toy_preview.xml               the Glyph Toys list icon, generated
   values/strings.xml                        the toy's name and summary
+app/src/test/kotlin/com/kexsam/orbitdial/
+  ClockFaceTest.kt                          the README's numbers and five golden frames, as tests
 app/src/debug/AndroidManifest.xml           adds TuneReceiver to debug builds only
 app/src/debug/kotlin/com/kexsam/orbitdial/
   TuneReceiver.kt                           changes the dial over adb
