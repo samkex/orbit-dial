@@ -26,6 +26,7 @@ Designed and tuned for this project. No Nothing product design is reproduced her
 
 ## The hero image
 
-`docs/hero.webp` shows the toy on a Nothing Phone (4a) Pro product render. The phone render is
-Nothing's; it is used here to show the toy in place and is **not** covered by this project's MIT
-licence. Reuse the code freely; do not reuse that image as if it were yours.
+`docs/hero.webp` and `docs/hero-phone-3.webp` show the toy on Nothing Phone (4a) Pro and Phone (3)
+product renders. The phone renders are Nothing's; they are used here to show the toy in place and
+are **not** covered by this project's MIT licence. Reuse the code freely; do not reuse those images
+as if they were yours.

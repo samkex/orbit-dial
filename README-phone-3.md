@@ -1,11 +1,11 @@
-# Orbit Dial: a Glyph Matrix clock toy for the Nothing Phone (4a) Pro
-**Phone (4a) Pro** · [Phone (3)](README-phone-3.md)
-An always-on clock for the Glyph Matrix on the back of the Nothing Phone (4a) Pro, written in Kotlin
+# Orbit Dial: a Glyph Matrix clock toy for the Nothing Phone (3)
+[Phone (4a) Pro](README.md) · **Phone (3)**
+An always-on clock for the Glyph Matrix on the back of the Nothing Phone (3), written in Kotlin
 as a Glyph Toy. Twelve scales around the rim, the current hour lit, and a block orbiting inside
-them for the minute. The same app runs on the Phone (3); its page is [here](README-phone-3.md).
+them for the minute. The same app runs on the Phone (4a) Pro; its page is [here](README.md).
 
 <p align="center">
-  <img src="docs/hero.webp" width="560" alt="Nothing Phone (4a) Pro, back view, showing Orbit Dial on the Glyph Matrix">
+  <img src="docs/hero-phone-3.webp" width="560" alt="Nothing Phone (3), back view, showing Orbit Dial on the Glyph Matrix">
 </p>
 
 > Built for digital minimalists, this clock provides just enough information to keep you grounded
@@ -16,7 +16,7 @@ installed it exists only inside the Glyph interface.
 
 ## Requirements
 
-**To run it:** a Nothing Phone (4a) Pro. The toy registers for whichever phone it runs on,
+**To run it:** a Nothing Phone (3). The toy registers for whichever phone it runs on,
 `Glyph.DEVICE_23112` or `Glyph.DEVICE_25111p`, and has been built and tested on the Phone (3) and
 the Phone (4a) Pro.
 
@@ -25,11 +25,11 @@ the Phone (4a) Pro.
 
 ## Install
 
-Each release has one APK per phone. Download `glyph-orbit-dial-v0.3-phone4aPro-release.apk` from the
+Each release has one APK per phone. Download `glyph-orbit-dial-v0.3-phone3-release.apk` from the
 [Releases](../../releases) page, or build it as below. Then:
 
 ```bash
-adb install glyph-orbit-dial-v0.3-phone4aPro-release.apk    # -r over an earlier version
+adb install glyph-orbit-dial-v0.3-phone3-release.apk    # -r over an earlier version
 ```
 
 On the phone: **Settings > Glyph Interface > Flip to Glyph > Always-on Glyph Toy**, choose
@@ -45,7 +45,7 @@ build fetches it:
 
 ```bash
 tools/fetch_sdk.sh        # fetches glyph-matrix-sdk-2.0.aar from the developer kit into libs/
-./gradlew assemblePhone4aProDebug   # -> app/build/outputs/apk/phone4aPro/debug/glyph-orbit-dial-v0.3-phone4aPro-debug.apk
+./gradlew assemblePhone3Debug   # -> app/build/outputs/apk/phone3/debug/glyph-orbit-dial-v0.3-phone3-debug.apk
 ./gradlew testPhone3DebugUnitTest testPhone4aProDebugUnitTest   # the dial's numbers, as tests, on the JVM
 ```
 
@@ -69,19 +69,16 @@ carries its own `res/drawable/ic_toy_preview.xml`; everything else is shared.
 
 ### Reading the dial
 <p align="center">
-  <img src="docs/orbit-dial-hours.svg" width="360" alt="Orbit Dial over two hours, animated: the minute block orbits, then the lit scale moves to the next hour">
+  <img src="docs/orbit-dial-phone-3.svg" width="300" alt="Orbit Dial on the Phone (3) at 10:08: twelve three-cell scales, the ten o'clock one lit, and a 2 by 2 minute block">
 </p>
 
-Two hours in fourteen seconds. The twelve scales are the hours, the lit one is now. The block
-inside them is the minute, orbiting once an hour, and it moves in steps because the ring it
-follows passes through only twelve cells (more on that below). When it comes round, the lit scale
-moves on by one.
-
-The animation is generated from the same numbers as the panel by `tools/make_preview.py`, which
-also writes it as `docs/orbit-dial.lottie.json` for anywhere with a Lottie player.
+At 10:08. The twelve scales are the hours, the lit one is now. The block inside them is the
+minute, orbiting once an hour, and it moves in steps because the ring it follows passes through 42
+positions rather than sixty (more on that below). When it comes round, the lit scale moves on by
+one. The image is generated from the same numbers as the panel by `tools/make_preview.py`.
 
 Everything below described as measured was measured against the developer kit at commit
-`999b1143`, on a Phone (4a) Pro on Nothing OS C5.0-260902-1559 (Android 17, security patch 2026-09-01, Glyph service `com.nothing.hearthstone` 3.6.0). Observed firmware behaviour is not an API contract; the kit's own
+`999b1143`, on a Phone (3) on Nothing OS C5.0-260921-0124 (Android 17, security patch 2026-10-01, Glyph service `com.nothing.hearthstone` 5.0.0). Observed firmware behaviour is not an API contract; the kit's own
 statements are quoted as such.
 
 ### One frame
@@ -92,17 +89,17 @@ current hour's scale at `full`, then the minute mark at `full`; where they overl
 value wins, and positions with no LED behind them are dropped. The service hands that array to
 `GlyphMatrixManager.setMatrixFrame` when `EVENT_AOD` arrives, and on every minute boundary itself,
 unless it is identical to the last one. `ClockFace` has no Android imports, so the dial is tested
-on the JVM: `ClockFaceTest` holds the numbers this page states and five golden frames.
+on the JVM: `Phone3Test` holds the numbers this page states and five golden frames.
 
-The five numbers it draws from are the fields of `Dial`. The Phone (4a) Pro's are `Dial.DEFAULT`,
+The five numbers it draws from are the fields of `Dial`. The Phone (3)'s are `Dial.PHONE_3`,
 chosen by `Dial.defaultFor(side)`:
 
 | | shipped | what it does |
 |---|---|---|
 | `full` | 2047 | the current hour and the minute mark |
 | `dim` | 575 | the other eleven scales |
-| `scaleLength` | 2 | cells per scale, counted inward from the rim |
-| `minuteOrbit` | 1.5 | the minute mark's ring, in cells from the centre |
+| `scaleLength` | 3 | cells per scale, counted inward from the rim |
+| `minuteOrbit` | 6.0 | the minute mark's ring, in cells from the centre |
 | `minuteSize` | 2 | the minute mark's side, in cells |
 
 ### Always-on, and nothing on the Glyph Button
@@ -114,17 +111,23 @@ From the developer kit's device table:
 | Phone (3) | `Glyph.DEVICE_23112` | 25 x 25 | Yes | All |
 | Phone (4a) Pro | `Glyph.DEVICE_25111p` | 13 x 13 | No | AOD only |
 
-No touch to react to and no carousel visit to animate for. The toy is chosen once as the
-always-on toy, declares `com.nothing.glyph.toy.aod_support` in its manifest, and then shows the
-time, redrawing when `EVENT_AOD` arrives. A clock is one of the few things that fits that brief
-rather than fighting it.
+Orbit Dial is an always-on toy here too: chosen once as the always-on toy, it declares
+`com.nothing.glyph.toy.aod_support` in its manifest and shows the time, redrawing when
+`EVENT_AOD` arrives. It declares no `toy.longpress`; measured, a long press of the Glyph Button
+sends the toy nothing and changes nothing on the panel.
 
-`Common.is25111p()` compares `Build.MODEL` against `Glyph.DEVICE_25111p`, which is the string
-`"A069P"`. `Common.getDeviceMatrixLength()` returns 13.
+It is also in the Glyph Toys list and carousel, where a visit gets no `EVENT_AOD` (measured: a
+preview bound for 120 s with no tick). The service therefore redraws on every minute boundary
+itself; on an always-on bind that lands a few milliseconds after `EVENT_AOD`, finds the frame
+unchanged and pushes nothing. A visit lasts as long as the toy timeout the user sets in Glyph
+Toys.
+
+`Common.is23112()` compares `Build.MODEL` against `Glyph.DEVICE_23112`, which is the string
+`"A024"`. `Common.getDeviceMatrixLength()` returns 25.
 
 ### The LED mask is a circle of radius `side / 2`
 
-Only 137 of the 13 x 13 grid's 169 positions have an LED behind them. The kit publishes the
+Only 489 of the 25 x 25 grid's 625 positions have an LED behind them. The kit publishes the
 allocation as a diagram rather than as data, but the shape is exactly a disc:
 
 ```kotlin
@@ -134,8 +137,8 @@ fun hasLed(col: Int, row: Int, side: Int): Boolean {
 }
 ```
 
-Checked cell by cell against the kit's own `image/23111_25111_LED_allocation.svg`, which marks
-absent positions with `fill-opacity="0.1"`. No table is needed.
+Checked cell by cell against the kit's own Phone (3) icon specification, `image/23112_spec.svg`,
+whose grids carry exactly these 489 squares. No table is needed.
 
 ### `setMatrixFrame` brightness is 0 to 2047, not 0 to 255
 
@@ -148,8 +151,8 @@ range: reading `finalColors` in logcat while `com.nothing.hearthstone` is on the
 of `2047`, which is 2^11 - 1 (measured on the Phone (4a) Pro). A toy written to the documented
 0-255 sends about an eighth of the value the stock ones do.
 
-The same log line shows what your own toy sends. On the Phone (4a) Pro this app's frames read
-`{575: 22, 2047: 6}`: the panel takes the full range.
+The same log line shows what your own toy sends. On the Phone (3) this app's frames read
+`{575: 33, 2047: 7}`: the panel takes the full range.
 
 ### Brightness is set on the panel, not on a screen
 
@@ -161,11 +164,11 @@ point; the debug build lets you move it on the panel without a rebuild (see Remi
 
 ### `EVENT_AOD` lands on the wall-clock minute
 
-The kit says an AOD toy receives `EVENT_AOD` "every minute". Measured on the Phone (4a) Pro, it lands on
+The kit says an AOD toy receives `EVENT_AOD` "every minute". Measured on the Phone (3), it lands on
 the minute boundary:
 
 ```
-13:21:00.011   13:22:00.010   13:23:00.021
+23:48:00.012   23:49:00.014   23:50:00.019
 ```
 
 Within about 20 ms. A clock therefore needs no timer of its own for the always-on panel, and the
@@ -187,17 +190,18 @@ for (c in 0 until side) for (r in 0 until side) {
 ```
 
 Straight lines keep all twelve scales reading as even ticks aimed at the middle. At one o'clock
-the cells are `(9,1)` and `(8,2)`.
+the cells are `(18,2)`, `(17,3)` and `(16,4)`.
 
-### A 13 x 13 grid cannot show sixty minute positions
+### A 25 x 25 grid still cannot show sixty minute positions
 
-The ring the minute mark travels passes through far fewer cells than sixty, so the mark stands
-still for whole minutes at a time. The 2 x 2 mark at orbit 1.5 lands on 12 distinct positions in
-an hour, changes 0.80 LEDs a minute on average, stands still for up to 7 minutes, and never
-touches a scale. `ClockFace.minutePositions` computes the position count for whatever dial is
-loaded, and the service logs it at bind.
+The ring the minute mark travels passes through fewer cells than sixty, so the mark stands still
+for whole minutes at a time. The 2 x 2 mark at orbit 6.0 lands on 42 distinct positions in an
+hour, stands still for up to 2 minutes, and never touches a scale. `ClockFace.minutePositions`
+computes the position count for whatever dial is loaded, and the service logs it at bind.
 
-The mark is 2 x 2 because a single LED is too faint to pick out.
+The mark is 2 x 2 because a single LED is too faint to pick out. Where its corner lands exactly on
+a half cell, it rounds up with a 1e-9 tolerance (`ClockFace.toCell`), so the last bit of a cosine
+cannot move it between the phone, the tests and the generated images.
 
 ### A toy service with no launcher activity is still listed
 
@@ -247,12 +251,12 @@ MIT licensed: use it, change it, republish it, keep the notice.
 
 ### Change the face
 
-Edit `Dial.DEFAULT` in `Dial.kt`, then:
+Edit `Dial.PHONE_3` in `Dial.kt`, then:
 
 ```bash
 python3 tools/make_preview.py   # regenerates both list icons and docs/ from the new numbers
-./gradlew assemblePhone4aProDebug
-adb install -r app/build/outputs/apk/phone4aPro/debug/glyph-orbit-dial-v0.3-phone4aPro-debug.apk
+./gradlew assemblePhone3Debug
+adb install -r app/build/outputs/apk/phone3/debug/glyph-orbit-dial-v0.3-phone3-debug.apk
 ```
 
 The icons and the images in `docs/` are generated from `Dial` rather than drawn, so they always
@@ -264,7 +268,7 @@ A **debug** build can be changed over adb, without a rebuild, while the dial is 
 
 ```bash
 adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei dim 575
-adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ef minute_orbit 1.5
+adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ef minute_orbit 6.0
 adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ez reset true
 ```
 
@@ -282,14 +286,14 @@ python3 tools/tuner.py --serial <serial>   # when more than one device is attach
 ```
 
 ```
-POST /set   {"full": 2047, "dim": 575, "scale_length": 2, "minute_orbit": 1.5, "minute_size": 2}
+POST /set   {"full": 2047, "dim": 575, "scale_length": 3, "minute_orbit": 6.0, "minute_size": 2}
 GET  /      {"ok": true, "serial": "…", "fields": [...]}
 ```
 
 Send only the fields you want to change. The service clamps whatever arrives to what the panel
 can draw (`Dial.clamped`: brightness 0 to 2047, `dim` no brighter than `full`, sizes and orbit
 within the disc), so a stray value cannot make the panel lie. Once a value is right, put it in
-`Dial.DEFAULT`. `TuneReceiver` and its manifest entry are both in `src/debug`, so a release build
+`Dial.PHONE_3`. `TuneReceiver` and its manifest entry are both in `src/debug`, so a release build
 has neither and its dial cannot be moved.
 
 ### Change the drawing
