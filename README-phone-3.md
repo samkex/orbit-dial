@@ -124,8 +124,9 @@ sends the toy nothing and changes nothing on the panel.
 It is also in the Glyph Toys list and carousel, where a visit gets no `EVENT_AOD` (measured: a
 preview bound for 120 s with no tick). The service therefore redraws on every minute boundary
 itself; on an always-on bind that lands a few milliseconds after `EVENT_AOD`, finds the frame
-unchanged and pushes nothing. A visit lasts as long as the toy timeout the user sets in Glyph
-Toys.
+unchanged and pushes nothing. Measured on a Glyph Toys preview with the screen on, the redraws
+landed at `00:26:00.135` and `00:27:00.156`. A visit lasts as long as the toy timeout the user sets
+in Glyph Toys.
 
 `Common.is23112()` compares `Build.MODEL` against `Glyph.DEVICE_23112`, which is the string
 `"A024"`. `Common.getDeviceMatrixLength()` returns 25.
@@ -321,7 +322,7 @@ source.
 
 | | date | what changed |
 |---|---|---|
-| v0.3 | 28/09/2026 | Phone (3) support: its own face (three-cell scales, orbit 6.0), its own Glyph Toys preview, one APK per phone, and a redraw on every minute boundary for Glyph Toys visits. Scales are straight strokes on both phones, the same cells as before on the Phone (4a) Pro. `dim` is 575 on both. The minute mark's half-cell rounding is the same on every platform |
+| v0.3 | 28/09/2026 | Phone (3) support: its own face (three-cell scales, orbit 6.0), its own Glyph Toys preview, one APK per phone, and a redraw on every minute boundary so a Glyph Toys preview keeps time. Scales are straight strokes on both phones, the same cells as before on the Phone (4a) Pro. `dim` is 575 on both. The minute mark's half-cell rounding is the same on every platform |
 | v0.2 | 26/09/2026 | Same dial. The SDK fetch is pinned to one kit commit with the aar's SHA-256 checked; 24 JVM tests and CI; the service ignores SDK callbacks after unbind, redraws in full after a Glyph service disconnect, and clamps a debug build's values to what the panel can draw; `minutePositions` counts visible positions; log tag `OrbitDial` |
 | v0.1 | 26/09/2026 | First release |
 

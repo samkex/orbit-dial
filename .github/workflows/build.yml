@@ -20,6 +20,6 @@ jobs:
       - name: Accept Android SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
       - name: Generated images match the model
-        run: python3 -B tools/make_preview.py && git diff --exit-code
+        run: python3 -B tools/make_preview.py && git diff --exit-code && test -z "$(git status --porcelain)"
       - name: Test and build
         run: ./gradlew --no-daemon testPhone4aProDebugUnitTest testPhone3DebugUnitTest assembleDebug

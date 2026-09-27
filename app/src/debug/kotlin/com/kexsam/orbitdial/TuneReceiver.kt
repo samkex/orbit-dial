@@ -10,7 +10,7 @@ import com.nothing.ketchum.Common
  * Changes the dial from adb, while the toy is on the panel. Debug builds only.
  *
  * ```
- * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei dim 614
+ * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei dim 575
  * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ei full 2047 --ef minute_orbit 1.5
  * adb shell am broadcast -n com.kexsam.orbitdial/.TuneReceiver -a com.kexsam.orbitdial.TUNE --ez reset true
  * ```
