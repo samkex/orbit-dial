@@ -33,6 +33,8 @@ FACE = ROOT / "app/src/main/kotlin/com/kexsam/orbitdial/Dial.kt"
 OUT = ROOT / "app/src/phone4aPro/res/drawable/ic_toy_preview.xml"
 OUT_PHONE_3 = ROOT / "app/src/phone3/res/drawable/ic_toy_preview.xml"
 DOC_PHONE_3 = ROOT / "docs/orbit-dial-phone-3.svg"  # the Phone (3) face, still, for the README
+ANIM_PHONE_3 = ROOT / "docs/orbit-dial-phone-3-hours.svg"  # two hours on the Phone (3), animated
+LOTTIE_PHONE_3 = ROOT / "docs/orbit-dial-phone-3.lottie.json"  # the same as Lottie
 DOC = ROOT / "docs/orbit-dial.svg"       # the README image, from the same numbers
 ANIM = ROOT / "docs/orbit-dial-hours.svg" # the same dial over two hours, animated, for the README
 LOTTIE = ROOT / "docs/orbit-dial.lottie.json"  # the same animation as Lottie, for players elsewhere
@@ -195,6 +197,12 @@ def main():
     print(f"{ANIM.relative_to(ROOT)}: {ANIM_MINUTES} minutes, "
           f"{ANIM_MINUTES * ANIM_SECONDS_PER_MINUTE:.0f} s loop, SMIL")
     write_lottie(frames)
+    frames3 = [phone3_frame(ANIM_START_HOUR + m // 60, m % 60) for m in range(ANIM_MINUTES)]
+    full3 = phone3_value("full", int)
+    write_animated_svg(frames3, path=ANIM_PHONE_3, layout=layout_3, full=full3)
+    print(f"{ANIM_PHONE_3.relative_to(ROOT)}: {ANIM_MINUTES} minutes on the Phone (3), SMIL")
+    write_lottie(frames3, path=LOTTIE_PHONE_3, layout=layout_3, full=full3)
+    print(f"{LOTTIE_PHONE_3.relative_to(ROOT)}: the same as Lottie")
     print(f"{LOTTIE.relative_to(ROOT)}: same animation as Lottie")
 
 
@@ -205,6 +213,28 @@ def phone3_value(name, cast=float):
         sys.exit("Dial.PHONE_3 not found in Dial.kt")
     got = re.search(rf"{name}\s*=\s*([0-9.]+)", m.group(1))
     return cast(got.group(1)) if got else default(name, cast)
+
+
+def phone3_frame(hour, minute):
+    """The Phone (3) face at hour:minute as rows of brightness, the same frame ClockFace renders."""
+    side = 25
+    c0 = (side - 1) / 2.0
+    has = lambda c, r: math.hypot(c - c0, r - c0) <= side / 2.0
+    scale_len, orbit = phone3_value("scaleLength", int), phone3_value("minuteOrbit")
+    full, dim, size = phone3_value("full", int), phone3_value("dim", int), phone3_value("minuteSize", int)
+    grid = [[0] * side for _ in range(side)]
+    for h in range(12):
+        for c, r in scale_ray(h * 30, scale_len, side):
+            grid[r][c] = max(grid[r][c], full if h == hour % 12 else dim)
+    a = math.radians(minute * 6)
+    left = round_half_up(c0 + orbit * math.sin(a) - (size - 1) / 2.0)
+    top = round_half_up(c0 - orbit * math.cos(a) - (size - 1) / 2.0)
+    for dy in range(size):
+        for dx in range(size):
+            c, r = left + dx, top + dy
+            if 0 <= c < side and 0 <= r < side and has(c, r):
+                grid[r][c] = max(grid[r][c], full)
+    return grid
 
 
 def write_phone3_icon():
@@ -301,13 +331,33 @@ def write_doc_image(grid):
     DOC.parent.mkdir(exist_ok=True)
     DOC.write_text("\n".join(parts) + "\n")
 
+def layout_4a(size):
+    """Where each LED sits on the (4a) Pro drawings: (side, has_led, top-left, centre, cell)."""
+    pitch, cell = cell_geometry(size)
+    tl = lambda col, row: (size * INSET + pitch * col + (pitch - cell) / 2,
+                           size * INSET + pitch * row + (pitch - cell) / 2)
+    ctr = lambda col, row: (size * INSET + pitch * col + pitch / 2, size * INSET + pitch * row + pitch / 2)
+    return SIDE, has_led, tl, ctr, cell
+
+
+def layout_3(size):
+    """The Phone (3) drawings, to the kit's Phone (3) icon spec scaled from its 272 frame."""
+    k = size / 272.0
+    first, pitch, square = 18.931 * k, 9.4671 * k, 6.93 * k
+    c0 = 12.0
+    has = lambda c, r: math.hypot(c - c0, r - c0) <= 12.5
+    tl = lambda col, row: (first + pitch * col, first + pitch * row)
+    ctr = lambda col, row: (first + pitch * col + square / 2, first + pitch * row + square / 2)
+    return 25, has, tl, ctr, square
+
+
 def cell_geometry(size):
     pitch = size * (1 - INSET * 2) / SIDE
     cell = pitch * CELL_RATIO
     return pitch, cell
 
 
-def write_animated_svg(frames):
+def write_animated_svg(frames, path=None, layout=layout_4a, full=None):
     """Two hours of the dial as an animated SVG.
 
     SMIL rather than script, because GitHub shows README images through an <img> tag, where
@@ -316,7 +366,8 @@ def write_animated_svg(frames):
     to a few tens of kilobytes rather than a few hundred.
     """
     size = 520.0
-    pitch, cell = cell_geometry(size)
+    side, has, tl, _, cell = layout(size)
+    full = full or FULL
     n = len(frames)
     dur = n * ANIM_SECONDS_PER_MINUTE
     key_times = ";".join(f"{i / n:.4f}" for i in range(n))
@@ -329,37 +380,36 @@ def write_animated_svg(frames):
         f'  <circle cx="{size / 2}" cy="{size / 2}" r="{size / 2}" fill="#000"/>',
     ]
     animated = 0
-    for row in range(SIDE):
-        for col in range(SIDE):
-            if not has_led(col, row):
+    for row in range(side):
+        for col in range(side):
+            if not has(col, row):
                 continue
-            x = size * INSET + pitch * col + (pitch - cell) / 2
-            y = size * INSET + pitch * row + (pitch - cell) / 2
+            x, y = tl(col, row)
             series = [f[row][col] for f in frames]
             if len(set(series)) == 1:
                 v = series[0]
-                fill = f'fill="#fff" fill-opacity="{v / FULL:.3f}"' if v else f'fill="{UNLIT}"'
+                fill = f'fill="#fff" fill-opacity="{v / full:.3f}"' if v else f'fill="{UNLIT}"'
                 parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" '
                              f'height="{cell:.1f}" {fill}/>')
                 continue
             # An LED that is off is drawn in the unlit grey, not left black, so the animated cells
             # carry their own grey underlay and fade the white above it.
             animated += 1
-            values = ";".join(f"{v / FULL:.3f}" for v in series)
+            values = ";".join(f"{v / full:.3f}" for v in series)
             parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" height="{cell:.1f}" '
                          f'fill="{UNLIT}"/>')
             parts.append(f'  <rect x="{x:.1f}" y="{y:.1f}" width="{cell:.1f}" height="{cell:.1f}" '
-                         f'fill="#fff" fill-opacity="{series[0] / FULL:.3f}">')
+                         f'fill="#fff" fill-opacity="{series[0] / full:.3f}">')
             parts.append(f'    <animate attributeName="fill-opacity" calcMode="discrete" '
                          f'dur="{dur:.2f}s" repeatCount="indefinite" '
                          f'keyTimes="{key_times}" values="{values}"/>')
             parts.append('  </rect>')
     parts.append("</svg>")
-    ANIM.write_text("\n".join(parts) + "\n")
+    (path or ANIM).write_text("\n".join(parts) + "\n")
     return animated
 
 
-def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1):
+def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1, layout=layout_4a, full=None):
     """The same two hours as a Lottie file, one shape layer, one group per LED.
 
     For anywhere with a Lottie player: a web page, an app, LottieFiles, a design tool. GitHub does
@@ -368,16 +418,16 @@ def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1):
     """
     import json
     size = 520
-    pitch, cell = cell_geometry(size)
+    side, has, _, ctr, cell = layout(size)
+    full = full or FULL
     fps = fps or 1 / ANIM_SECONDS_PER_MINUTE   # by default one frame per minute
     n = len(frames) * frames_per_minute
     groups = []
-    for row in range(SIDE):
-        for col in range(SIDE):
-            if not has_led(col, row):
+    for row in range(side):
+        for col in range(side):
+            if not has(col, row):
                 continue
-            cx = size * INSET + pitch * col + pitch / 2
-            cy = size * INSET + pitch * row + pitch / 2
+            cx, cy = ctr(col, row)
             series = [f[row][col] for f in frames]
             rect = {"ty": "rc", "d": 1, "s": {"a": 0, "k": [cell, cell]},
                     "p": {"a": 0, "k": [0, 0]}, "r": {"a": 0, "k": 0}}
@@ -386,13 +436,13 @@ def write_lottie(frames, path=LOTTIE, fps=None, frames_per_minute=1):
                 items = [rect, base]
             else:
                 if len(set(series)) == 1:
-                    o = {"a": 0, "k": round(100 * series[0] / FULL, 1)}
+                    o = {"a": 0, "k": round(100 * series[0] / full, 1)}
                 else:
                     keys = []
                     for i, v in enumerate(series):
                         if i == 0 or v != series[i - 1]:
                             keys.append({"t": i * frames_per_minute,
-                                         "s": [round(100 * v / FULL, 1)], "h": 1})
+                                         "s": [round(100 * v / full, 1)], "h": 1})
                     o = {"a": 1, "k": keys}
                 white = {"ty": "fl", "c": {"a": 0, "k": [1, 1, 1, 1]}, "o": o}
                 # Both fills apply to the one rect. Lottie draws a group's items top-down, so

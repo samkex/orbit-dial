@@ -241,6 +241,8 @@ docs/
   orbit-dial.lottie.json                    the same animation as Lottie
   orbit-dial.svg                            one frame on the Phone (4a) Pro, still
   orbit-dial-phone-3.svg                    one frame on the Phone (3), still
+  orbit-dial-phone-3-hours.svg              two hours of the Phone (3) dial, animated
+  orbit-dial-phone-3.lottie.json            the same animation as Lottie
 ```
 
 ## Remix

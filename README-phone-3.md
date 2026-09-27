@@ -71,13 +71,16 @@ carries its own `res/drawable/ic_toy_preview.xml`; everything else is shared.
 
 ### Reading the dial
 <p align="center">
-  <img src="docs/orbit-dial-phone-3.svg" width="300" alt="Orbit Dial on the Phone (3) at 10:08: twelve three-cell scales, the ten o'clock one lit, and a 2 by 2 minute block">
+  <img src="docs/orbit-dial-phone-3-hours.svg" width="360" alt="Orbit Dial on the Phone (3) over two hours, animated: the minute block orbits, then the lit scale moves to the next hour">
 </p>
 
-At 10:08. The twelve scales are the hours, the lit one is now. The block inside them is the
-minute, orbiting once an hour, and it moves in steps because the ring it follows passes through 42
-positions rather than sixty (more on that below). When it comes round, the lit scale moves on by
-one. The image is generated from the same numbers as the panel by `tools/make_preview.py`.
+Two hours in fourteen seconds. The twelve scales are the hours, the lit one is now. The block
+inside them is the minute, orbiting once an hour, and it moves in steps because the ring it
+follows passes through 42 positions rather than sixty (more on that below). When it comes round,
+the lit scale moves on by one.
+
+The animation is generated from the same numbers as the panel by `tools/make_preview.py`, which
+also writes it as `docs/orbit-dial-phone-3.lottie.json` for anywhere with a Lottie player.
 
 Everything below described as measured was measured against the developer kit at commit
 `999b1143`, on a Phone (3) on Nothing OS C5.0-260921-0124 (Android 17, security patch 2026-10-01, Glyph service `com.nothing.hearthstone` 5.0.0). Observed firmware behaviour is not an API contract; the kit's own
@@ -245,6 +248,8 @@ docs/
   orbit-dial.lottie.json                    the same animation as Lottie
   orbit-dial.svg                            one frame on the Phone (4a) Pro, still
   orbit-dial-phone-3.svg                    one frame on the Phone (3), still
+  orbit-dial-phone-3-hours.svg              two hours of the Phone (3) dial, animated
+  orbit-dial-phone-3.lottie.json            the same animation as Lottie
 ```
 
 ## Remix
