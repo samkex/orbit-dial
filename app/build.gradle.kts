@@ -42,6 +42,16 @@ android {
         versionName   = appVersionName
     }
 
+    /* One APK per phone. The code, the package and the dial are the same in both, and the dial
+       picks its face from the panel at run time; the only difference is the Glyph Toys list
+       preview, which the manifest names as a single drawable and Android cannot choose by phone
+       model. Each flavour carries its own `res/drawable/ic_toy_preview.xml`. */
+    flavorDimensions += "phone"
+    productFlavors {
+        create("phone4aPro") { dimension = "phone" }
+        create("phone3") { dimension = "phone" }
+    }
+
     signingConfigs {
         if (releaseSigningAvailable) {
             create("release") {
