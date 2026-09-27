@@ -76,20 +76,42 @@ def polar(radius, deg):
     return CENTRE + radius * math.sin(a), CENTRE - radius * math.cos(a)
 
 
-def scale_ray(deg, length):
-    outer = float(int(SIDE / 2))
-    fx, fy = polar(outer, deg)
-    col, row = round(fx), round(fy)
-    out = [(col, row)]
-    for _ in range(1, length):
-        dx, dy = CENTRE - col, CENTRE - row
-        m = math.hypot(dx, dy)
-        if m < 0.5:
-            break
-        col += round(dx / m)
-        row += round(dy / m)
-        out.append((col, row))
-    return out
+def round_half_up(x):
+    """ClockFace.toCell: nearest cell, halves up, with the same 1e-9 tolerance so that a corner
+    exactly on a half cell lands the same way here as on the phone (see its KDoc)."""
+    return math.floor(x + 0.5 + 1e-9)
+
+
+DIRECTIONS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
+
+
+def scale_ray(deg, length, side=None):
+    """ClockFace.scaleRay: a straight line from the rim, along the grid direction nearest the
+    centre, placed where its cells sit closest to the hour's angle on average."""
+    side = side or SIDE
+    centre = (side - 1) / 2.0
+    has = lambda c, r: math.hypot(c - centre, r - centre) <= side / 2.0
+    a = math.radians(deg)
+    inx, iny = -math.sin(a), math.cos(a)
+    dx, dy = max(DIRECTIONS, key=lambda v: (v[0] * inx + v[1] * iny) / math.hypot(*v))
+
+    def off(c, r):
+        at = (math.degrees(math.atan2(c - centre, centre - r)) + 360) % 360
+        d = abs(at - deg) % 360
+        return min(d, 360 - d)
+
+    best, best_err = [], float("inf")
+    for c in range(side):
+        for r in range(side):
+            if not has(c, r) or has(c - dx, r - dy):
+                continue
+            cells = [(c + dx * k, r + dy * k) for k in range(length)]
+            if not all(0 <= x < side and 0 <= y < side and has(x, y) for x, y in cells):
+                continue
+            err = sum(off(x, y) for x, y in cells) / length
+            if err < best_err:
+                best, best_err = cells, err
+    return best
 
 
 def frame(hour=HOUR, minute=MINUTE):
@@ -105,8 +127,8 @@ def frame(hour=HOUR, minute=MINUTE):
             put(col, row, FULL if h == hour % 12 else DIM)
 
     fx, fy = polar(MINUTE_ORBIT, minute * 6)
-    left = round(fx - (MINUTE_SIZE - 1) / 2.0)
-    top = round(fy - (MINUTE_SIZE - 1) / 2.0)
+    left = round_half_up(fx - (MINUTE_SIZE - 1) / 2.0)
+    top = round_half_up(fy - (MINUTE_SIZE - 1) / 2.0)
     for dy in range(MINUTE_SIZE):
         for dx in range(MINUTE_SIZE):
             put(left + dx, top + dy, FULL)

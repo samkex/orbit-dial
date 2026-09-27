@@ -1,8 +1,11 @@
 package com.kexsam.orbitdial
 
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.hypot
-import kotlin.math.roundToInt
+import kotlin.math.abs
+import kotlin.math.min
+import kotlin.math.atan2
 import kotlin.math.sin
 
 /**
@@ -33,40 +36,55 @@ object ClockFace {
     fun ledCount(side: Int): Int =
         (0 until side).sumOf { r -> (0 until side).count { c -> hasLed(c, r, side) } }
 
-    /** Degrees run clockwise from twelve o'clock, so sin for x and -cos for y. */
-    private fun polarCell(radius: Double, deg: Double, side: Int): Pair<Int, Int> {
-        val c = (side - 1) / 2.0
-        val a = Math.toRadians(deg)
-        return (c + radius * sin(a)).roundToInt() to (c - radius * cos(a)).roundToInt()
-    }
-
     /**
-     * One hour scale: the rim cell for that hour, then a walk inward, one grid step at a time,
-     * in whichever of the eight directions points most nearly at the centre.
+     * One hour scale: a straight line of [length] cells, starting on the rim and running inward
+     * along whichever of the eight grid directions points most nearly at the centre, placed where
+     * its cells sit closest to the hour's angle on average.
      *
-     * Solving the polar position again at a smaller radius is the obvious alternative and it is
-     * wrong in a way that only shows on the panel. At one o'clock radius 6 gives (9,1) and
-     * radius 5 gives (9,2): the same column, so the mark reads as a vertical pair rather than a
-     * stroke aimed at the middle. Stepping gives (9,1) then (8,2), a diagonal, and the dial
-     * reads as twelve ticks. Checked cell by cell against the intended arrangement for all
-     * twelve hours.
+     * Straight, because a scale that bends reads as uneven. Walking inward and re-aiming at the
+     * centre at every step, which is what this did before, gives the same cells up to two cells
+     * long on both panels, and bends eight of the twelve scales at three cells on the Phone (3):
+     * at two o'clock (22,6), (21,7), then sideways to (20,7). This rule gives (22,6), (21,7), (20,8).
+     * "Rim" means the first cell is an LED and the cell outward of it along the line is not.
      */
     fun scaleRay(deg: Double, length: Int, side: Int): List<Pair<Int, Int>> {
         val centre = (side - 1) / 2.0
-        val outer = (side / 2.0).toInt().toDouble()
-        var (c, r) = polarCell(outer, deg, side)
-        val out = mutableListOf(c to r)
-        for (k in 1 until length) {
-            val dx = centre - c
-            val dy = centre - r
-            val m = hypot(dx, dy)
-            if (m < 0.5) break          // already at the middle, nowhere left to go
-            c += (dx / m).roundToInt()
-            r += (dy / m).roundToInt()
-            out += c to r
+        val a = Math.toRadians(deg)
+        val inX = -sin(a)
+        val inY = cos(a)              // rows grow downward, so inward from twelve is +row
+        val (dx, dy) = DIRECTIONS.maxByOrNull { (x, y) -> (x * inX + y * inY) / hypot(x.toDouble(), y.toDouble()) }!!
+
+        fun offHour(c: Int, r: Int): Double {
+            val at = (Math.toDegrees(atan2(c - centre, centre - r)) + 360.0) % 360.0
+            val d = abs(at - deg) % 360.0
+            return min(d, 360.0 - d)
         }
-        return out
+
+        var best: List<Pair<Int, Int>> = emptyList()
+        var bestError = Double.MAX_VALUE
+        for (c in 0 until side) for (r in 0 until side) {
+            if (!hasLed(c, r, side) || hasLed(c - dx, r - dy, side)) continue
+            val cells = (0 until length).map { k -> (c + dx * k) to (r + dy * k) }
+            if (!cells.all { (x, y) -> x in 0 until side && y in 0 until side && hasLed(x, y, side) }) continue
+            val error = cells.sumOf { (x, y) -> offHour(x, y) } / length
+            if (error < bestError) { bestError = error; best = cells }
+        }
+        return best
     }
+
+    /**
+     * A block's corner, to the nearest cell, with a half cell always going up.
+     *
+     * The tolerance is not cosmetic. On the Phone (3) at orbit 6.0 the block's corner lands exactly
+     * on a half cell at sixteen minutes of the hour, and there the last bit of a cosine decides the
+     * result: the JVM computes 14.4999… at twenty past and Python 14.5, so the phone and the
+     * generated docs disagreed by a cell. Adding 1e-9 before the floor makes every exact half go up
+     * on every platform. On the (4a) Pro the only halves are exact already and nothing moves.
+     */
+    private fun toCell(x: Double): Int = floor(x + 0.5 + 1e-9).toInt()
+
+    /** The eight grid steps, in the order the tie-break relies on. */
+    private val DIRECTIONS = listOf(1 to 0, 1 to 1, 0 to 1, -1 to 1, -1 to 0, -1 to -1, 0 to -1, 1 to -1)
 
     /**
      * The frame for a given time, row-major, one value per addressing position.
@@ -94,8 +112,8 @@ object ClockFace {
         val centre = (side - 1) / 2.0
         val fx = centre + dial.minuteOrbit * sin(a)
         val fy = centre - dial.minuteOrbit * cos(a)
-        val left = (fx - (dial.minuteSize - 1) / 2.0).roundToInt()
-        val top = (fy - (dial.minuteSize - 1) / 2.0).roundToInt()
+        val left = toCell(fx - (dial.minuteSize - 1) / 2.0)
+        val top = toCell(fy - (dial.minuteSize - 1) / 2.0)
         for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
             put(left + dx, top + dy, dial.full)
         }
@@ -118,8 +136,8 @@ object ClockFace {
             val a = Math.toRadians(m * 6.0)
             val fx = centre + dial.minuteOrbit * sin(a)
             val fy = centre - dial.minuteOrbit * cos(a)
-            val left = (fx - (dial.minuteSize - 1) / 2.0).roundToInt()
-            val top = (fy - (dial.minuteSize - 1) / 2.0).roundToInt()
+            val left = toCell(fx - (dial.minuteSize - 1) / 2.0)
+            val top = toCell(fy - (dial.minuteSize - 1) / 2.0)
             val cells = mutableSetOf<Pair<Int, Int>>()
             for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
                 val c = left + dx

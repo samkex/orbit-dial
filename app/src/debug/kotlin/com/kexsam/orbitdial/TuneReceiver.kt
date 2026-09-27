@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.nothing.ketchum.Common
 
 /**
  * Changes the dial from adb, while the toy is on the panel. Debug builds only.
@@ -33,7 +34,7 @@ class TuneReceiver : BroadcastReceiver() {
 
         if (intent.getBooleanExtra("reset", false)) {
             edit.clear().apply()
-            Log.i(TAG, "reset to the shipped dial: ${Dial.DEFAULT}")
+            Log.i(TAG, "reset to the shipped dial: ${Dial.defaultFor(Common.getDeviceMatrixLength())}")
             return
         }
 
@@ -55,7 +56,7 @@ class TuneReceiver : BroadcastReceiver() {
             return
         }
         edit.apply()
-        Log.i(TAG, "tuned $touched value(s) -> ${Dial.load(context)}")
+        Log.i(TAG, "tuned $touched value(s) -> ${Dial.load(context, Common.getDeviceMatrixLength())}")
     }
 
     private companion object {

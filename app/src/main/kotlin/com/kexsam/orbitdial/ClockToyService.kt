@@ -43,7 +43,7 @@ class ClockToyService : Service() {
        takes to write a file, instead of waiting for the next minute's EVENT_AOD. A release build
        never fires this: the receiver that writes these values is only in the debug manifest. */
     private val onDialChanged = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-        dial = Dial.load(this)
+        dial = Dial.load(this, side)
         last = null                     // force a push, even if the time has not moved
         draw("tuned")
     }
@@ -66,7 +66,8 @@ class ClockToyService : Service() {
         active = true
         Log.i(TAG, "onBind action=${intent?.action}")
 
-        dial = Dial.load(this)
+        side = Common.getDeviceMatrixLength()
+        dial = Dial.load(this, side)
         Dial.prefs(this).registerOnSharedPreferenceChangeListener(onDialChanged)
 
         GlyphMatrixManager.getInstance(applicationContext).let { gm ->
@@ -77,14 +78,18 @@ class ClockToyService : Service() {
                         Log.w(TAG, "glyph service connected after unbind, ignored")
                         return
                     }
-                    /* Registered for the (4a) Pro unconditionally. The toy has only ever been
-                       built and tested for that device, so any other one is reported rather than
-                       quietly assumed to behave the same. */
-                    if (!Common.is25111p()) {
-                        Log.w(TAG, "this is ${android.os.Build.MODEL}, not a Phone (4a) Pro; " +
-                            "the dial is untested here")
+                    /* The two phones with a Glyph Matrix, told apart the way the kit does. Anything
+                       else is reported and drawn as a (4a) Pro, since that is the face the grid
+                       length would pick anyway. */
+                    val target = when {
+                        Common.is23112() -> Glyph.DEVICE_23112
+                        Common.is25111p() -> Glyph.DEVICE_25111p
+                        else -> {
+                            Log.w(TAG, "${android.os.Build.MODEL} is neither a Phone (3) nor a " +
+                                "Phone (4a) Pro; the dial is untested here")
+                            Glyph.DEVICE_25111p
+                        }
                     }
-                    val target = Glyph.DEVICE_25111p
                     val registered = gm.register(target)
                     side = Common.getDeviceMatrixLength()
                     Log.i(TAG, "registered $target = $registered, matrix side $side, " +

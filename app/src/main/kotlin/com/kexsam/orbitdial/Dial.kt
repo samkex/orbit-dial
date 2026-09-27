@@ -62,7 +62,17 @@ data class Dial(
     }
 
     companion object {
+        /** The (4a) Pro's shipped face, 13 by 13. */
         val DEFAULT = Dial()
+
+        /**
+         * The Phone (3)'s face, 25 by 25: longer scales and a wider orbit for the bigger grid.
+         * Brightness starts at the (4a) Pro's values and is settled on this panel.
+         */
+        val PHONE_3 = Dial(scaleLength = 3, minuteOrbit = 6.0)
+
+        /** The shipped face for a panel of this side. */
+        fun defaultFor(side: Int): Dial = if (side >= 25) PHONE_3 else DEFAULT
 
         /** The top of `setMatrixFrame`'s range on the panel, which is 2^11 - 1, not 255. */
         const val MAX_BRIGHTNESS = 2047
@@ -77,14 +87,15 @@ data class Dial(
         fun prefs(context: Context): SharedPreferences =
             context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-        /** Whatever a debug build last wrote, falling back to the shipped face for each value. */
-        fun load(context: Context): Dial = prefs(context).let { p ->
+        /** Whatever a debug build last wrote, falling back to this panel's shipped face for each value. */
+        fun load(context: Context, side: Int): Dial = prefs(context).let { p ->
+            val d = defaultFor(side)
             Dial(
-                full = p.getInt(KEY_FULL, DEFAULT.full),
-                dim = p.getInt(KEY_DIM, DEFAULT.dim),
-                scaleLength = p.getInt(KEY_SCALE_LENGTH, DEFAULT.scaleLength),
-                minuteOrbit = p.getFloat(KEY_MINUTE_ORBIT, DEFAULT.minuteOrbit.toFloat()).toDouble(),
-                minuteSize = p.getInt(KEY_MINUTE_SIZE, DEFAULT.minuteSize),
+                full = p.getInt(KEY_FULL, d.full),
+                dim = p.getInt(KEY_DIM, d.dim),
+                scaleLength = p.getInt(KEY_SCALE_LENGTH, d.scaleLength),
+                minuteOrbit = p.getFloat(KEY_MINUTE_ORBIT, d.minuteOrbit.toFloat()).toDouble(),
+                minuteSize = p.getInt(KEY_MINUTE_SIZE, d.minuteSize),
             )
         }
     }
