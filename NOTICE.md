@@ -12,13 +12,17 @@ project's code and nothing else.
 
 ## Where the numbers come from
 
-Matrix length, the device identifier and the LED allocation are read from Nothing's public
-[GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit),
-including its `image/23111_25111_LED_allocation.svg` and `image/25111_spec.svg`. The cell size
-used in the icon, 0.8606 of the pitch, is measured from that allocation diagram. The icon's 7.09
-per cent inset from its frame is a drawing choice for the icon.
+Matrix length, the device identifiers and the LED allocation are read from Nothing's public
+[GlyphMatrix Developer Kit](https://github.com/Nothing-Developer-Programme/GlyphMatrix-Developer-Kit).
 
-Everything the README describes as measured was measured on a Phone (4a) Pro.
+- Phone (4a) Pro: `image/23111_25111_LED_allocation.svg` and `image/25111_spec.svg`. The icon's
+  cell size, 0.8606 of the pitch, is measured from that allocation diagram; its 7.09 per cent inset
+  from the frame is a drawing choice for the icon.
+- Phone (3): `image/23112_spec.svg`. The icon is drawn to that specification's own geometry: a 272
+  circle, squares of 6.93 at a pitch of 9.4671, starting 18.931 in from the frame.
+
+Everything a README page describes as measured was measured on the phone that page is about,
+unless it says otherwise.
 
 ## The dial
 
