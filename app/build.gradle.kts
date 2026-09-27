@@ -79,7 +79,7 @@ android {
     }
 }
 
-// Output name. Gives glyph-orbit-dial-v0.1-release.apk and glyph-orbit-dial-v0.1-debug.apk,
+// Output name. Gives glyph-orbit-dial-v<version>-<phone>-release.apk and the -debug one per flavour,
 // rather than the default app-release.apk, which says nothing once it is off this machine.
 base { archivesName.set("glyph-orbit-dial-v$appVersionName") }
 

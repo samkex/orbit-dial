@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drives the dial on a connected phone over HTTP, for live tuning.
 
-    python3 tools/tuner.py                 # picks the only attached (4a) Pro
+    python3 tools/tuner.py                 # picks the attached Phone (3) or (4a) Pro
     python3 tools/tuner.py --serial 003…   # when more than one device is attached
 
 Then POST to it. Anything that can send JSON will do; a page with five sliders is the obvious
@@ -59,15 +59,15 @@ def find_device(wanted: str | None) -> str:
         return wanted
     if not rows:
         sys.exit("no device attached")
-    # Prefer a (4a) Pro, since that is the only device this toy is for.
-    pros = [s for s in rows
-            if subprocess.run(["adb", "-s", s, "shell", "getprop", "ro.product.model"],
-                              capture_output=True, text=True).stdout.strip() == "A069P"]
-    if len(pros) == 1:
-        return pros[0]
+    # The two phones this toy runs on. With exactly one of them attached, use it.
+    models = {s: subprocess.run(["adb", "-s", s, "shell", "getprop", "ro.product.model"],
+                                capture_output=True, text=True).stdout.strip() for s in rows}
+    phones = [s for s, m in models.items() if m in ("A069P", "A024")]
+    if len(phones) == 1:
+        return phones[0]
     if len(rows) == 1:
         return rows[0]
-    sys.exit(f"more than one device attached and no (4a) Pro to choose: {rows}. Pass --serial.")
+    sys.exit(f"more than one device attached: {models}. Pass --serial.")
 
 
 def push(values: dict) -> dict:
@@ -137,8 +137,8 @@ def main():
     SERIAL = find_device(args.serial)
     model = adb("shell", "getprop", "ro.product.model").stdout.strip()
     print(f"tuner -> {SERIAL} ({model}) on http://127.0.0.1:{args.port}")
-    if model != "A069P":
-        print("  note: that is not a (4a) Pro, so the 13x13 numbers will not apply")
+    if model not in ("A069P", "A024"):
+        print("  note: that is neither a Phone (3) nor a (4a) Pro")
     print(f"  POST JSON to http://127.0.0.1:{args.port}/set with any of: {', '.join(FIELDS)}")
     HTTPServer(("127.0.0.1", args.port), Handler).serve_forever()
 

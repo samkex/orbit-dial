@@ -38,4 +38,11 @@ class DialTest {
         assertEquals(0.0, d.copy(minuteOrbit = -1.0).clamped(side).minuteOrbit, 0.0)
         assertEquals(6.5, d.copy(minuteOrbit = 99.0).clamped(side).minuteOrbit, 0.0)
     }
+
+    @Test fun `a panel of unknown size is clamped without throwing`() {
+        assertEquals(1, Dial.defaultFor(0).clamped(0).minuteSize)
+    }
+
+    @Test fun `a non-finite orbit falls back to the panel's own orbit`() =
+        assertEquals(6.0, Dial.PHONE_3.copy(minuteOrbit = Double.NaN).clamped(25).minuteOrbit, 0.0)
 }

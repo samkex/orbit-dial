@@ -18,12 +18,12 @@ data class Dial(
     /** The current hour and the minute mark. The panel's range is 0..2047, not 0..255. */
     val full: Int = 2047,
     /**
-     * The other eleven scales.
+     * The other eleven scales, on both phones.
      *
-     * Settled by looking at the panel. The LEDs' response near the bottom of their range is not
-     * a display's, so this is a hardware value and not a percentage to be recomputed.
+     * Set on the panel. The LEDs' response near the bottom of their range is not a display's, so
+     * this is a hardware value and not a percentage to be recomputed.
      */
-    val dim: Int = 614,
+    val dim: Int = 575,
     /** Cells per scale, counted inward from the rim. */
     val scaleLength: Int = 2,
     /**
@@ -56,8 +56,8 @@ data class Dial(
             dim = dim.coerceIn(0, fullOk),
             scaleLength = scaleLength.coerceIn(1, maxOf(1, side / 2)),
             minuteOrbit = if (minuteOrbit.isFinite()) minuteOrbit.coerceIn(0.0, side / 2.0)
-                          else DEFAULT.minuteOrbit,
-            minuteSize = minuteSize.coerceIn(1, side),
+                          else defaultFor(side).minuteOrbit,
+            minuteSize = minuteSize.coerceIn(1, maxOf(1, side)),
         )
     }
 
@@ -66,8 +66,8 @@ data class Dial(
         val DEFAULT = Dial()
 
         /**
-         * The Phone (3)'s face, 25 by 25: longer scales and a wider orbit for the bigger grid.
-         * Brightness starts at the (4a) Pro's values and is settled on this panel.
+         * The Phone (3)'s face, 25 by 25: longer scales and a wider orbit for the bigger grid, at the
+         * same brightness as the (4a) Pro.
          */
         val PHONE_3 = Dial(scaleLength = 3, minuteOrbit = 6.0)
 

@@ -75,15 +75,16 @@ object ClockFace {
     /**
      * A block's corner, to the nearest cell, with a half cell always going up.
      *
-     * The tolerance is not cosmetic. On the Phone (3) at orbit 6.0 the block's corner lands exactly
-     * on a half cell at sixteen minutes of the hour, and there the last bit of a cosine decides the
-     * result: the JVM computes 14.4999… at twenty past and Python 14.5, so the phone and the
-     * generated docs disagreed by a cell. Adding 1e-9 before the floor makes every exact half go up
-     * on every platform. On the (4a) Pro the only halves are exact already and nothing moves.
+     * The tolerance is not cosmetic. On the Phone (3) at orbit 6.0 the corner lands exactly on a
+     * half cell in twelve minutes of the hour, and at two of them, 20 and 55 past, the JVM's cosine
+     * or sine comes out one bit under the half (14.4999… and 8.4999…) where Python's is on it. A
+     * plain half-up round then puts the phone and the generated images a cell apart. Adding 1e-9
+     * before the floor sends every one of those halves up on every platform. With the shipped
+     * (4a) Pro dial no corner is affected.
      */
     private fun toCell(x: Double): Int = floor(x + 0.5 + 1e-9).toInt()
 
-    /** The eight grid steps, in the order the tie-break relies on. */
+    /** The eight grid steps. Their order would only matter on a tie, and no hour angle makes one. */
     private val DIRECTIONS = listOf(1 to 0, 1 to 1, 0 to 1, -1 to 1, -1 to 0, -1 to -1, 0 to -1, 1 to -1)
 
     /**
@@ -106,17 +107,7 @@ object ClockFace {
             for ((c, r) in scaleRay(h * 30.0, dial.scaleLength, side)) put(c, r, value)
         }
 
-        /* Centred on the exact polar point rather than on a cell, so an even-sided block is
-           not biased a half cell one way. Cells with no LED behind them are dropped by put. */
-        val a = Math.toRadians(minute * 6.0)
-        val centre = (side - 1) / 2.0
-        val fx = centre + dial.minuteOrbit * sin(a)
-        val fy = centre - dial.minuteOrbit * cos(a)
-        val left = toCell(fx - (dial.minuteSize - 1) / 2.0)
-        val top = toCell(fy - (dial.minuteSize - 1) / 2.0)
-        for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
-            put(left + dx, top + dy, dial.full)
-        }
+        for ((c, r) in minuteCells(minute, side, dial)) put(c, r, dial.full)
         return frame
     }
 
@@ -129,25 +120,27 @@ object ClockFace {
      * footprint, not its centre cell, so it matches what is visible on the panel. Kept here so
      * the number is checkable rather than remembered.
      */
-    fun minutePositions(side: Int, dial: Dial = Dial.DEFAULT): Int {
+    fun minutePositions(side: Int, dial: Dial = Dial.DEFAULT): Int =
+        (0 until 60).map { minuteCells(it, side, dial) }.toSet().size
+
+    /**
+     * The cells the minute mark lights at [minute], on the panel: the block centred on the exact
+     * polar point, so an even-sided block is not biased a half cell one way, with cells off the
+     * grid or without an LED left out. [render], [minutePositions] and the tests all read the
+     * mark from here, so they cannot disagree about where it is.
+     */
+    fun minuteCells(minute: Int, side: Int, dial: Dial = Dial.DEFAULT): Set<Pair<Int, Int>> {
+        val a = Math.toRadians(minute * 6.0)
         val centre = (side - 1) / 2.0
-        val seen = mutableSetOf<Set<Pair<Int, Int>>>()
-        for (m in 0 until 60) {
-            val a = Math.toRadians(m * 6.0)
-            val fx = centre + dial.minuteOrbit * sin(a)
-            val fy = centre - dial.minuteOrbit * cos(a)
-            val left = toCell(fx - (dial.minuteSize - 1) / 2.0)
-            val top = toCell(fy - (dial.minuteSize - 1) / 2.0)
-            val cells = mutableSetOf<Pair<Int, Int>>()
-            for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
-                val c = left + dx
-                val r = top + dy
-                // The same filter render applies: a cell off the grid or with no LED is not a position.
-                if (c in 0 until side && r in 0 until side && hasLed(c, r, side)) cells += c to r
-            }
-            seen += cells
+        val left = toCell(centre + dial.minuteOrbit * sin(a) - (dial.minuteSize - 1) / 2.0)
+        val top = toCell(centre - dial.minuteOrbit * cos(a) - (dial.minuteSize - 1) / 2.0)
+        val cells = mutableSetOf<Pair<Int, Int>>()
+        for (dy in 0 until dial.minuteSize) for (dx in 0 until dial.minuteSize) {
+            val c = left + dx
+            val r = top + dy
+            if (c in 0 until side && r in 0 until side && hasLed(c, r, side)) cells += c to r
         }
-        return seen.size
+        return cells
     }
 
     /** True when two frames would look identical, so an unchanged minute costs no push. */

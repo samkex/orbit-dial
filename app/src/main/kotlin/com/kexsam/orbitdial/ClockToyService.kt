@@ -66,7 +66,7 @@ class ClockToyService : Service() {
         active = true
         Log.i(TAG, "onBind action=${intent?.action}")
 
-        side = Common.getDeviceMatrixLength()
+        side = panelSide()
         dial = Dial.load(this, side)
         Dial.prefs(this).registerOnSharedPreferenceChangeListener(onDialChanged)
 
@@ -79,8 +79,8 @@ class ClockToyService : Service() {
                         return
                     }
                     /* The two phones with a Glyph Matrix, told apart the way the kit does. Anything
-                       else is reported and drawn as a (4a) Pro, since that is the face the grid
-                       length would pick anyway. */
+                       else is reported, registered as a (4a) Pro and drawn on a 13 by 13, since
+                       the kit gives such a phone no matrix length at all. */
                     val target = when {
                         Common.is23112() -> Glyph.DEVICE_23112
                         Common.is25111p() -> Glyph.DEVICE_25111p
@@ -91,12 +91,13 @@ class ClockToyService : Service() {
                         }
                     }
                     val registered = gm.register(target)
-                    side = Common.getDeviceMatrixLength()
+                    side = panelSide()
                     Log.i(TAG, "registered $target = $registered, matrix side $side, " +
                         "${ClockFace.ledCount(side)} LEDs, " +
                         "${ClockFace.minutePositions(side, dial.clamped(side))} minute positions")
                     Log.i(TAG, "dial: $dial")
                     draw("bind")
+                    scheduleMinute()
                 }
                 override fun onServiceDisconnected(name: android.content.ComponentName?) {
                     Log.w(TAG, "glyph service disconnected")
@@ -110,6 +111,7 @@ class ClockToyService : Service() {
     override fun onUnbind(intent: Intent?): Boolean {
         Log.i(TAG, "onUnbind after ${System.currentTimeMillis() - boundAt} ms")
         active = false
+        handler.removeCallbacks(minuteTick)
         runCatching { Dial.prefs(this).unregisterOnSharedPreferenceChangeListener(onDialChanged) }
         runCatching { matrix?.unInit() }.onFailure { Log.w(TAG, "unInit failed: $it") }
         matrix = null
@@ -130,7 +132,7 @@ class ClockToyService : Service() {
             Log.w(TAG, "draw($reason) before the manager was ready")
             return
         }
-        if (side <= 0) side = Common.getDeviceMatrixLength()
+        if (side <= 0) side = panelSide()
 
         val now = Calendar.getInstance()
         val hour = now.get(Calendar.HOUR)
@@ -151,6 +153,26 @@ class ClockToyService : Service() {
             }
             .onFailure { Log.e(TAG, "$reason: setMatrixFrame refused: $it") }
     }
+
+    /* A carousel visit on the Phone (3) gets no EVENT_AOD, so without this the dial would keep
+       the minute it was bound at for as long as the visit lasts (the user sets that, up to 30
+       minutes). This redraws on every minute boundary regardless; on an always-on bind it lands a
+       few milliseconds after EVENT_AOD, finds the frame unchanged and pushes nothing. */
+    private val minuteTick = Runnable {
+        if (!active) return@Runnable
+        draw("minute")
+        scheduleMinute()
+    }
+
+    private fun scheduleMinute() {
+        handler.removeCallbacks(minuteTick)
+        val now = System.currentTimeMillis()
+        handler.postDelayed(minuteTick, 60_000 - now % 60_000 + 50)
+    }
+
+    /** The kit's matrix length for this phone, or a (4a) Pro's where the kit has none. */
+    private fun panelSide(): Int =
+        Common.getDeviceMatrixLength().takeIf { it > 0 } ?: Glyph.DEVICE_25111p_MATRIX_LENGTH
 
     private companion object {
         const val TAG = "OrbitDial"
