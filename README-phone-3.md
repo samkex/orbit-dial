@@ -1,6 +1,6 @@
 # Orbit Dial: a Glyph Matrix clock toy for the Nothing Phone (3)
 
-[Phone (4a) Pro](README.md) · **Phone (3)**
+[Phone (4a) Pro](README.md) &nbsp;|&nbsp; **Phone (3)**
 
 An always-on clock for the Glyph Matrix on the back of the Nothing Phone (3), written in Kotlin
 as a Glyph Toy. Twelve scales around the rim, the current hour lit, and a block orbiting inside
