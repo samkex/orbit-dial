@@ -139,7 +139,8 @@ class ClockToyService : Service() {
         val minute = now.get(Calendar.MINUTE)
         val drawn = dial.clamped(side)
         if (drawn != dial) Log.w(TAG, "dial clamped to what the panel can draw: $drawn")
-        val frame = ClockFace.render(hour, minute, side, drawn)
+        val live = liveFrame()
+        val frame = live ?: ClockFace.render(hour, minute, side, drawn)
 
         if (ClockFace.same(last, frame)) {
             Log.i(TAG, "$reason: %02d:%02d unchanged, nothing pushed".format(hour, minute))
@@ -148,7 +149,9 @@ class ClockToyService : Service() {
         runCatching { gm.setMatrixFrame(frame) }
             .onSuccess {
                 last = frame
-                Log.i(TAG, "$reason: %02d:%02d drawn at %tT.%<tL, %d lit"
+                if (live != null) Log.i(TAG, "$reason: live frame drawn at %tT.%<tL, %d lit"
+                    .format(now, frame.count { it > 0 }))
+                else Log.i(TAG, "$reason: %02d:%02d drawn at %tT.%<tL, %d lit"
                     .format(hour, minute, now, frame.count { it > 0 }))
             }
             .onFailure { Log.e(TAG, "$reason: setMatrixFrame refused: $it") }
@@ -173,6 +176,13 @@ class ClockToyService : Service() {
     /** The kit's matrix length for this phone, or a (4a) Pro's where the kit has none. */
     private fun panelSide(): Int =
         Common.getDeviceMatrixLength().takeIf { it > 0 } ?: Glyph.DEVICE_25111p_MATRIX_LENGTH
+
+    /** A previewed frame while it is fresh, or null to draw the dial. See [LiveFrame]. */
+    private fun liveFrame(): IntArray? {
+        val p = Dial.prefs(this)
+        if (!LiveFrame.fresh(p.getLong(LiveFrame.KEY_AT, 0L), System.currentTimeMillis())) return null
+        return LiveFrame.decode(p.getString(LiveFrame.KEY_FRAME, null), side)?.let { LiveFrame.masked(it, side) }
+    }
 
     private companion object {
         const val TAG = "OrbitDial"

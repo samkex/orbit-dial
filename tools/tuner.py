@@ -40,9 +40,15 @@ FIELDS = {
     "scale_length": ("--ei", int),
     "minute_size": ("--ei", int),
     "minute_orbit": ("--ef", float),
+    "frame": ("--es", str),            # a whole frame, 3 hex digits per position (see LiveFrame.kt)
+    "live_off": ("--ez", lambda v: "true" if v else "false"),
 }
 
+# The panel side for each model, so a client can check it is sending the right size of frame.
+SIDES = {"A069P": 13, "A024": 25}
+
 SERIAL = None
+MODEL = None
 
 
 def adb(*args: str) -> subprocess.CompletedProcess:
@@ -96,7 +102,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        body = json.dumps({"ok": True, "serial": SERIAL, "fields": list(FIELDS)}).encode()
+        body = json.dumps({"ok": True, "serial": SERIAL, "model": MODEL, "side": SIDES.get(MODEL),
+                           "fields": list(FIELDS)}).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self._cors()
@@ -119,7 +126,8 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
         if result.get("ok"):
-            print("  " + "  ".join(f"{k}={v}" for k, v in result["sent"].items()), flush=True)
+            print("  " + "  ".join(f"{k}={v if k != 'frame' else str(len(v)) + ' chars'}"
+                                   for k, v in result["sent"].items()), flush=True)
         else:
             print("  ! " + str(result.get("error") or result), flush=True)
 
@@ -128,14 +136,14 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    global SERIAL
+    global SERIAL, MODEL
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--serial", help="device serial, when more than one is attached")
     ap.add_argument("--port", type=int, default=PORT)
     args = ap.parse_args()
 
     SERIAL = find_device(args.serial)
-    model = adb("shell", "getprop", "ro.product.model").stdout.strip()
+    model = MODEL = adb("shell", "getprop", "ro.product.model").stdout.strip()
     print(f"tuner -> {SERIAL} ({model}) on http://127.0.0.1:{args.port}")
     if model not in ("A069P", "A024"):
         print("  note: that is neither a Phone (3) nor a (4a) Pro")

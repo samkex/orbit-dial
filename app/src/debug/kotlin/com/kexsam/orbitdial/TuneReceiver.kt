@@ -38,6 +38,21 @@ class TuneReceiver : BroadcastReceiver() {
             return
         }
 
+        /* A design tool's preview: show its frame instead of the dial, or stop showing it. */
+        if (intent.getBooleanExtra("live_off", false)) {
+            edit.remove(LiveFrame.KEY_FRAME).remove(LiveFrame.KEY_AT).apply()
+            Log.i(TAG, "live frame off, back to the dial")
+            return
+        }
+        intent.getStringExtra("frame")?.let { text ->
+            val side = Common.getDeviceMatrixLength()
+            if (LiveFrame.decode(text, side) == null) {
+                Log.w(TAG, "live frame refused: ${text.length} characters is not a ${side}x$side frame")
+            } else {
+                edit.putString(LiveFrame.KEY_FRAME, text).putLong(LiveFrame.KEY_AT, System.currentTimeMillis())
+            }
+        }
+
         var touched = 0
         fun int(extra: String, key: String) {
             if (intent.hasExtra(extra)) { edit.putInt(key, intent.getIntExtra(extra, 0)); touched++ }
@@ -52,6 +67,7 @@ class TuneReceiver : BroadcastReceiver() {
         }
 
         if (touched == 0) {
+            if (intent.hasExtra("frame")) { edit.apply(); return }   // a frame alone is a normal update
             Log.w(TAG, "nothing to change; extras were ${intent.extras?.keySet()}")
             return
         }

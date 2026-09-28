@@ -225,6 +225,7 @@ returns the service alongside the stock ones. An interface-free Glyph Toy is via
 app/src/main/AndroidManifest.xml            the toy service, its metadata, no activity
 app/src/main/kotlin/com/kexsam/orbitdial/
   ClockFace.kt                              the dial as one frame of brightness; no Android imports
+  LiveFrame.kt                              a previewed frame, shown instead of the dial in a debug build
   Dial.kt                                   the five numbers that decide what it looks like, per phone
   ClockToyService.kt                        the bound Service the system talks to
 app/src/main/res/values/strings.xml         the toy's name and summary
@@ -295,7 +296,7 @@ python3 tools/tuner.py --serial <serial>   # when more than one device is attach
 
 ```
 POST /set   {"full": 2047, "dim": 575, "scale_length": 3, "minute_orbit": 6.0, "minute_size": 2}
-GET  /      {"ok": true, "serial": "…", "fields": [...]}
+GET  /      {"ok": true, "serial": "…", "model": "…", "side": 25, "fields": [...]}
 ```
 
 Send only the fields you want to change. The service clamps whatever arrives to what the panel
@@ -303,6 +304,12 @@ can draw (`Dial.clamped`: brightness 0 to 2047, `dim` no brighter than `full`, s
 within the disc), so a stray value cannot make the panel lie. Once a value is right, put it in
 `Dial.PHONE_3`. `TuneReceiver` and its manifest entry are both in `src/debug`, so a release build
 has neither and its dial cannot be moved.
+
+A debug build also takes a whole frame: `frame` is the panel as 3 hex digits per position,
+row-major, 0 to 2047 each (`LiveFrame.kt`), and the toy shows it instead of the dial for 30
+seconds after it last arrived; `live_off` returns to the dial at once. A design
+tool can use it to show on the panel exactly what it draws, time and minute hand included. A
+frame for the other phone's grid is refused.
 
 ### Change the drawing
 
